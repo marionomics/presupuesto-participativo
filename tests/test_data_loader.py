@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from code.simulation.data_loader import load_pb_data, PBData
+from pb_mes.simulation.data_loader import load_pb_data, PBData
 
 def test_load_returns_pbdata(tmp_path):
     votes = tmp_path / "votes.csv"
