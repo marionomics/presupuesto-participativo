@@ -72,14 +72,14 @@ def run_mes(
         best_p: str | None = None
         best_rho: float = float("inf")
 
-        for p in remaining:
+        for p in sorted(remaining):
             supporters = [
                 i for i in approvals if p in approvals[i] and shares[i] > 0
             ]
             if not supporters:
                 continue
             rho = compute_rho(supporters, shares, costs[p])
-            if rho is not None and rho < best_rho:
+            if rho is not None and (rho < best_rho or (rho == best_rho and (best_p is None or p < best_p))):
                 best_rho = rho
                 best_p = p
 
