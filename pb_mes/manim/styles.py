@@ -38,12 +38,15 @@ def make_coin(color: str = PALETTE["accent"], radius: float = 0.09) -> Circle:
                   stroke_color=PALETTE["dark"], stroke_width=0.5)
 
 
-def make_voter_node(vid: str, color: str) -> tuple[VGroup, ValueTracker]:
+def make_voter_node(vid: str, color: str) -> tuple[VGroup, ValueTracker, Mobject]:
     """
-    Returns (voter_vgroup, balance_tracker).
-    voter_vgroup contains: circle, label, schematic coin stack (5 coins max),
-    and a DecimalNumber label showing the current balance.
-    balance_tracker starts at 25.0; animate it to update the stack and label.
+    Returns (voter_dot, balance_tracker, coin_stack).
+    voter_dot: VGroup(circle, label) — position this in the scene.
+    balance_tracker: starts at 25.0; animate to shrink the coin stack.
+    coin_stack: an always_redraw mobject that MUST be added to the scene separately
+    (not as a child of voter_dot). It self-positions directly below voter_dot
+    using voter_dot.get_center() each frame.
+    Add both to the scene: self.add(voter_dot, coin_stack)
     """
     tracker = ValueTracker(25.0)
 
@@ -52,7 +55,7 @@ def make_voter_node(vid: str, color: str) -> tuple[VGroup, ValueTracker]:
     lbl = Text(vid, font_size=20, color=WHITE).move_to(circle)
     voter_dot = VGroup(circle, lbl)
 
-    # Schematic coin stack: 5 circles, height scales with tracker
+    # Coin stack positioned relative to voter_dot using its get_center() each frame
     def build_stack():
         ratio = max(tracker.get_value() / 25.0, 0.0)
         n = max(int(round(ratio * 5)), 0)
@@ -60,17 +63,18 @@ def make_voter_node(vid: str, color: str) -> tuple[VGroup, ValueTracker]:
             make_coin().shift(UP * i * 0.16)
             for i in range(n)
         ])
-        # Balance label below stack
+        base = voter_dot.get_center() + DOWN * 1.0
+        stack.move_to(base + UP * (n - 1) * 0.08)  # stack grows upward from base
         bal = Text(f"{tracker.get_value():.1f}", font_size=13,
                    color=PALETTE["neutral"])
         if n > 0:
             bal.next_to(stack, DOWN, buff=0.08)
         else:
-            bal.shift(DOWN * 0.1)
+            bal.move_to(base + DOWN * 0.15)
         return VGroup(stack, bal)
 
     coin_stack = always_redraw(build_stack)
-    return VGroup(voter_dot, coin_stack), tracker
+    return voter_dot, tracker, coin_stack
 
 
 def make_project_card(name: str, cost: float, district: str,

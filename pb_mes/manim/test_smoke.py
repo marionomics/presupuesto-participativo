@@ -5,9 +5,9 @@ from styles import make_voter_node, make_project_card, make_cost_bar
 class SmokeTest(Scene):
     def construct(self):
         self.camera.background_color = PALETTE["bg"]
-        voter, tracker = make_voter_node("v1", PALETTE["dark"])
-        voter.move_to(LEFT * 3)
-        self.add(voter)
+        voter_dot, tracker, coin_stack = make_voter_node("v1", PALETTE["dark"])
+        voter_dot.move_to(LEFT * 3)
+        self.add(voter_dot, coin_stack)
 
         card = make_project_card("Park", 40, "Center", PALETTE["dark"])
         card.move_to(RIGHT * 2)
