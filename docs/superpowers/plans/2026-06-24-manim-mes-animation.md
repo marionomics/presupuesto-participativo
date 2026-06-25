@@ -14,13 +14,13 @@
 - macOS system deps first: `brew install cairo pango ffmpeg`
 - All source under `pb_mes/manim/` — NOT `code/manim/` (stdlib shadow)
 - Within scene files import styles as `from styles import PALETTE` (Manim adds the scene file's directory to sys.path, so no package prefix needed)
-- Color palette — exact hex values:
-  - `ujedblue` = `#003580` (Center district, voter circles v1/v2)
-  - `ujedaccent` = `#D4A017` (coins, ρ winner highlight)
-  - `mesdark` = `#1A6B3A` (Marginal district, funded markers)
-  - `demdark` = `#8B1A1A` (infeasible markers)
-  - `neutral` = `#555555` (labels, cost bars background)
-  - `bg` = `#FAFAFA` (scene background)
+- Color palette — Marionomics brand (exact hex values):
+  - `dark` = `#1A1E1D` (Marionomics charcoal — voter circles, Center district cards)
+  - `accent` = `#B4FF00` (Marionomics neon lime — coins, ρ winner, funded markers)
+  - `marginal` = `#4A7A6D` (muted teal — Marginal district cards; readable on cream)
+  - `infeasible` = `#C0392B` (red — universally readable as "no/error")
+  - `neutral` = `#6B7280` (mid-grey — labels, cost bar background)
+  - `bg` = `#EDE9E3` (Marionomics cream — scene background)
 - Preview render command (run from project root): `manim -pql pb_mes/manim/scene_mes.py MESScene`
 - Production render: `manim -pqh pb_mes/manim/scene_mes.py MESScene`
 - Output directory `pb_mes/manim/media/` must be gitignored
@@ -97,14 +97,12 @@ Create `pb_mes/manim/styles.py`:
 from manim import *
 
 PALETTE = {
-    "ujedblue":   "#003580",
-    "ujeddark":   "#001F4D",
-    "ujedaccent": "#D4A017",
-    "mesdark":    "#1A6B3A",
-    "demdark":    "#8B1A1A",
-    "uamdark":    "#4A4A8A",
-    "neutral":    "#555555",
-    "bg":         "#FAFAFA",
+    "dark":       "#1A1E1D",   # Marionomics charcoal
+    "accent":     "#B4FF00",   # Marionomics neon lime
+    "marginal":   "#4A7A6D",   # muted teal for Marginal district
+    "infeasible": "#C0392B",   # red for errors/infeasible
+    "neutral":    "#6B7280",   # mid-grey for labels
+    "bg":         "#EDE9E3",   # Marionomics cream background
     "white":      "#FFFFFF",
 }
 
@@ -117,23 +115,23 @@ STACK_Y_OFFSET = -1.0   # coin stack center below voter circle center
 COST_BAR_Y_OFFSET = -0.62  # cost bar center below project card center
 
 VOTERS_DATA = [
-    {"id": "v1", "approves": {"p1", "p3"}, "color": PALETTE["ujedblue"]},
-    {"id": "v2", "approves": {"p1", "p3"}, "color": PALETTE["ujedblue"]},
-    {"id": "v3", "approves": {"p1", "p2"}, "color": PALETTE["uamdark"]},
-    {"id": "v4", "approves": {"p2", "p4"}, "color": PALETTE["demdark"]},
+    {"id": "v1", "approves": {"p1", "p3"}, "color": PALETTE["dark"]},
+    {"id": "v2", "approves": {"p1", "p3"}, "color": PALETTE["dark"]},
+    {"id": "v3", "approves": {"p1", "p2"}, "color": PALETTE["dark"]},
+    {"id": "v4", "approves": {"p2", "p4"}, "color": PALETTE["dark"]},
 ]
 
 PROJECTS_DATA = [
-    {"id": "p1", "name": "Park renovation", "cost": 40, "district": "Center",   "color": PALETTE["ujedblue"]},
-    {"id": "p2", "name": "School repair",   "cost": 30, "district": "Marginal", "color": PALETTE["mesdark"]},
-    {"id": "p3", "name": "Road paving",     "cost": 50, "district": "Center",   "color": PALETTE["ujedblue"]},
-    {"id": "p4", "name": "Water access",    "cost": 20, "district": "Marginal", "color": PALETTE["mesdark"]},
+    {"id": "p1", "name": "Park renovation", "cost": 40, "district": "Center",   "color": PALETTE["dark"]},
+    {"id": "p2", "name": "School repair",   "cost": 30, "district": "Marginal", "color": PALETTE["marginal"]},
+    {"id": "p3", "name": "Road paving",     "cost": 50, "district": "Center",   "color": PALETTE["dark"]},
+    {"id": "p4", "name": "Water access",    "cost": 20, "district": "Marginal", "color": PALETTE["marginal"]},
 ]
 
 
-def make_coin(color: str = PALETTE["ujedaccent"], radius: float = 0.09) -> Circle:
+def make_coin(color: str = PALETTE["accent"], radius: float = 0.09) -> Circle:
     return Circle(radius=radius, fill_color=color, fill_opacity=1.0,
-                  stroke_color=PALETTE["ujeddark"], stroke_width=0.5)
+                  stroke_color=PALETTE["dark"], stroke_width=0.5)
 
 
 def make_voter_node(vid: str, color: str) -> tuple[VGroup, ValueTracker]:
@@ -219,15 +217,15 @@ from styles import make_voter_node, make_project_card, make_cost_bar
 class SmokeTest(Scene):
     def construct(self):
         self.camera.background_color = PALETTE["bg"]
-        voter, tracker = make_voter_node("v1", PALETTE["ujedblue"])
+        voter, tracker = make_voter_node("v1", PALETTE["dark"])
         voter.move_to(LEFT * 3)
         self.add(voter)
 
-        card = make_project_card("Park", 40, "Center", PALETTE["ujedblue"])
+        card = make_project_card("Park", 40, "Center", PALETTE["dark"])
         card.move_to(RIGHT * 2)
         self.add(card)
 
-        bar, bar_tracker = make_cost_bar(40, PALETTE["ujedblue"])
+        bar, bar_tracker = make_cost_bar(40, PALETTE["dark"])
         bar.next_to(card, DOWN, buff=0.15)
         self.add(bar)
 
@@ -339,7 +337,7 @@ class MESScene(Scene):
                 self.approval_lines[(vi, pi)] = line
 
         # Round label (top center, replaced each act)
-        self.round_label = Text("", font_size=24, color=PALETTE["ujedblue"])
+        self.round_label = Text("", font_size=24, color=PALETTE["dark"])
         self.round_label.to_edge(UP, buff=0.3)
 
     # ── Act 1: Setup ───────────────────────────────────────────────────
@@ -347,7 +345,7 @@ class MESScene(Scene):
     def _act1_setup(self):
         # Title
         title = Text("Method of Equal Shares", font_size=34,
-                     color=PALETTE["ujedblue"]).to_edge(UP, buff=0.25)
+                     color=PALETTE["dark"]).to_edge(UP, buff=0.25)
         eq = MathTex(r"B = 100,\quad n = 4,\quad b_i = 25",
                      font_size=22, color=PALETTE["neutral"])
         eq.next_to(title, DOWN, buff=0.15)
@@ -502,7 +500,7 @@ Replace the `_act2_round1` stub:
 ```python
 def _act2_round1(self):
     # Round label
-    r1_lbl = Text("Round 1", font_size=26, color=PALETTE["ujedblue"])
+    r1_lbl = Text("Round 1", font_size=26, color=PALETTE["dark"])
     r1_lbl.to_edge(UP, buff=0.25)
     self.play(Write(r1_lbl))
 
@@ -510,7 +508,7 @@ def _act2_round1(self):
     rho_data = [("13.3", True), ("15.0", False), ("25.0", False), ("20.0", False)]
     rho_labels = VGroup()
     for i, (val, is_winner) in enumerate(rho_data):
-        color = PALETTE["ujedaccent"] if is_winner else PALETTE["neutral"]
+        color = PALETTE["accent"] if is_winner else PALETTE["neutral"]
         size = 18 if is_winner else 14
         lbl = Text(f"ϱ = {val}", font_size=size, color=color)
         lbl.next_to(self.project_cards[i], UP, buff=0.12)
@@ -521,7 +519,7 @@ def _act2_round1(self):
 
     # Highlight p1 (winner)
     p1_box = SurroundingRectangle(self.project_cards[0],
-                                   color=PALETTE["ujedaccent"], stroke_width=2.5)
+                                   color=PALETTE["accent"], stroke_width=2.5)
     self.play(Create(p1_box))
     self.wait(0.3)
 
@@ -530,7 +528,7 @@ def _act2_round1(self):
         self._send_coins(vi, 0, amount=13.33, run_time=1.2)
 
     # Funded marker on p1
-    check = Text("✓ FUNDED", font_size=14, color=PALETTE["mesdark"])
+    check = Text("✓ FUNDED", font_size=14, color=PALETTE["accent"])
     check.next_to(self.cost_bars[0], DOWN, buff=0.1)
     self.play(FadeIn(check, scale=1.2))
     self.wait(0.5)
@@ -545,7 +543,7 @@ Replace the `_act3_round2` stub:
 
 ```python
 def _act3_round2(self):
-    r2_lbl = Text("Round 2", font_size=26, color=PALETTE["ujedblue"])
+    r2_lbl = Text("Round 2", font_size=26, color=PALETTE["dark"])
     r2_lbl.to_edge(UP, buff=0.25)
     self.play(Write(r2_lbl))
 
@@ -558,12 +556,12 @@ def _act3_round2(self):
     rho_labels.add(lbl_p1)
 
     # p2 winner
-    lbl_p2 = Text("ϱ = 18.33", font_size=18, color=PALETTE["ujedaccent"])
+    lbl_p2 = Text("ϱ = 18.33", font_size=18, color=PALETTE["accent"])
     lbl_p2.next_to(self.project_cards[1], UP, buff=0.12)
     rho_labels.add(lbl_p2)
 
     # p3 infeasible
-    lbl_p3 = Text("✗ infeasible", font_size=13, color=PALETTE["demdark"])
+    lbl_p3 = Text("✗ infeasible", font_size=13, color=PALETTE["infeasible"])
     lbl_p3.next_to(self.project_cards[2], UP, buff=0.12)
     rho_labels.add(lbl_p3)
 
@@ -577,7 +575,7 @@ def _act3_round2(self):
 
     # Highlight p2
     p2_box = SurroundingRectangle(self.project_cards[1],
-                                   color=PALETTE["ujedaccent"], stroke_width=2.5)
+                                   color=PALETTE["accent"], stroke_width=2.5)
     self.play(Create(p2_box))
     self.wait(0.3)
 
@@ -588,7 +586,7 @@ def _act3_round2(self):
     self._send_coins(3, 1, amount=18.33, run_time=1.3)
 
     # Funded marker on p2
-    check2 = Text("✓ FUNDED", font_size=14, color=PALETTE["mesdark"])
+    check2 = Text("✓ FUNDED", font_size=14, color=PALETTE["accent"])
     check2.next_to(self.cost_bars[1], DOWN, buff=0.1)
     self.play(FadeIn(check2, scale=1.2))
     self.wait(0.5)
@@ -637,17 +635,17 @@ Replace the `_act4_mes_stops` stub:
 
 ```python
 def _act4_mes_stops(self):
-    r3_lbl = Text("Round 3", font_size=26, color=PALETTE["ujedblue"])
+    r3_lbl = Text("Round 3", font_size=26, color=PALETTE["dark"])
     r3_lbl.to_edge(UP, buff=0.25)
     self.play(Write(r3_lbl))
 
     # Infeasibility markers for p3 and p4
     p3_x = Text("✗  v1 + v2 = 23.3 < 50", font_size=13,
-                 color=PALETTE["demdark"])
+                 color=PALETTE["infeasible"])
     p3_x.next_to(self.project_cards[2], UP, buff=0.12)
 
     p4_x = Text("✗  v4 = 6.67 < 20", font_size=13,
-                 color=PALETTE["demdark"])
+                 color=PALETTE["infeasible"])
     p4_x.next_to(self.project_cards[3], UP, buff=0.12)
 
     self.play(FadeIn(p3_x, shift=LEFT * 0.2),
@@ -656,14 +654,14 @@ def _act4_mes_stops(self):
 
     # Stop message
     stop_msg = Text("No affordable project — MES phase complete",
-                    font_size=18, color=PALETTE["demdark"])
+                    font_size=18, color=PALETTE["infeasible"])
     stop_msg.to_edge(DOWN, buff=0.8)
     self.play(Write(stop_msg))
     self.wait(1.0)
 
     # Remaining budget pool (30 coins) materializes at bottom center
     pool_label = Text("Remaining budget: 30", font_size=16,
-                      color=PALETTE["ujedaccent"])
+                      color=PALETTE["accent"])
     pool_label.to_edge(DOWN, buff=0.4)
 
     # Visual pool: small group of coin circles
@@ -691,7 +689,7 @@ Replace the `_act5_completion` stub:
 ```python
 def _act5_completion(self):
     comp_lbl = Text("Completion phase", font_size=26,
-                    color=PALETTE["ujedblue"])
+                    color=PALETTE["dark"])
     comp_lbl.to_edge(UP, buff=0.25)
     self.play(Write(comp_lbl))
     self.wait(0.5)
@@ -714,7 +712,7 @@ def _act5_completion(self):
     self.remove(travel_coins)
 
     # Funded marker on p4
-    check4 = Text("✓ FUNDED", font_size=14, color=PALETTE["mesdark"])
+    check4 = Text("✓ FUNDED", font_size=14, color=PALETTE["accent"])
     check4.next_to(self.cost_bars[3], DOWN, buff=0.1)
     self.play(FadeIn(check4, scale=1.2))
     self.wait(0.5)
@@ -741,11 +739,11 @@ def _act5_completion(self):
     # Glow funded project cards
     for pi in [0, 1, 3]:  # p1, p2, p4
         box = SurroundingRectangle(self.project_cards[pi],
-                                    color=PALETTE["mesdark"], stroke_width=2)
+                                    color=PALETTE["accent"], stroke_width=2)
         self.play(Create(box), run_time=0.4)
 
     result = Text("W  =  { p1 (Park),  p2 (School),  p4 (Water) }",
-                  font_size=20, color=PALETTE["mesdark"])
+                  font_size=20, color=PALETTE["dark"])
     result.to_edge(DOWN, buff=0.9)
 
     tagline = Text("Marginal district: 2 of 3 projects funded — no geographic constraint.",
@@ -839,7 +837,7 @@ git commit -m "feat: MES Manim animation — production render complete"
 | p3 fades to indicate not funded | Task 4 |
 | Finale: p1,p2,p4 glow, result text | Task 4 |
 | ~65 seconds total | All acts combined |
-| Color palette matches Beamer | `PALETTE` in `styles.py` |
+| Color palette uses Marionomics brand | `PALETTE` in `styles.py` |
 | Corrected algorithm (Round 2 = p2, not p4) | Hardcoded in task briefings and `_act3_round2()` |
 | Module path `pb_mes/manim/` | All file paths in plan |
 | Gitignored media output | Task 1 Step 3 |
