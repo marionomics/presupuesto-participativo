@@ -20,3 +20,7 @@ __pycache__/
 # Data — raw files are not committed (large, potentially sensitive)
 # Exception: MES simulation pipeline requires test data (CSV snapshots)
 data/enigh/
+
+# Manim rendered output
+pb_mes/manim/media/
+media/
