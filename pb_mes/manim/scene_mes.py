@@ -3,7 +3,8 @@ from styles import (
     PALETTE, VOTERS_DATA, PROJECTS_DATA,
     VOTER_X, PROJECT_X, VOTER_YS, PROJECT_YS,
     STACK_Y_OFFSET, COST_BAR_Y_OFFSET,
-    make_voter_node, make_project_card, make_cost_bar, make_coin,
+    make_voter_node, make_project_card, make_cost_bar,
+    make_coin,  # used by _send_coins (Task 3)
 )
 
 
@@ -33,6 +34,13 @@ class MESScene(Scene):
             self.voter_nodes.append(voter_dot)
             self.voter_trackers.append(tracker)
             self.voter_stacks.append(coin_stack)
+
+        # Add coin stacks to scene now so they are available in all acts.
+        # They are always_redraw mobjects; they self-position using voter_dot.get_center()
+        # each frame, so they don't need a separate move_to().
+        for stack in self.voter_stacks:
+            self.add(stack)
+            stack.set_opacity(0)  # hidden until _act1_setup reveals them
 
         # Projects: card VGroup, cost bar VGroup, cost bar tracker
         self.project_cards = []
@@ -90,8 +98,7 @@ class MESScene(Scene):
             *[FadeIn(node, scale=0.7) for node in self.voter_nodes],
             lag_ratio=0.2,
         ))
-        # Coin stacks are added to scene and drop in
-        self.add(*self.voter_stacks)
+        # Coin stacks fade in (already on scene with opacity=0)
         self.play(LaggedStart(
             *[FadeIn(stack, shift=UP * 0.3) for stack in self.voter_stacks],
             lag_ratio=0.15,
