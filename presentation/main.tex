@@ -331,9 +331,10 @@
 
 \begin{frame}[shrink=15]{Distortion 1: Preference Truncation \textit{(Truncamiento de Preferencias)}}
   \begin{block}{Proposition}
-    Under sincere voting, utilitarian social welfare satisfies
+    Under sincere voting \emph{with full information}, utilitarian social welfare satisfies
     \(W^{\cDEM{\DEM}} \leq W^{\cUAM{\UAM}}\),
-    with strict inequality whenever the marginal voter has cross-district preferences.
+    with strict inequality whenever the marginal voter has cross-district preferences.\\[2pt]
+    \footnotesize\emph{(With incomplete information the ranking can reverse --- this is exactly Distortion 5.)}
   \end{block}
   \medskip
   \textbf{Intuition:}
@@ -341,7 +342,7 @@
     \item A voter who cares about projects in \emph{two} districts must abandon half their preferences
     \item All 6 votes are forced into one district --- even if the voter's top priority lies elsewhere
     \item The DEM \emph{artificially narrows} each voter's expressed preference profile
-    \item Since $\mathcal{M}^{\DEM} \subsetneq \mathcal{M}^{\UAM}$, the UAM always selects from a weakly larger feasible set
+    \item Since $\mathcal{M}^{\DEM} \subsetneq \mathcal{M}^{\UAM}$, the DEM truncates the preferences each voter can express
   \end{itemize}
 \end{frame}
 
@@ -412,7 +413,7 @@
       \item Inflates district $d_\mathcal{C}$'s vote pool by $|\mathcal{C}| \cdot \votes$
       \item Creates vote displacement $\Delta_\mathcal{C} = \votes \cdot |\mathcal{C}^*|$
         ($\mathcal{C}^*$: members diverted from their preferred district)
-      \item Causes welfare loss $\mathcal{L}(\mathcal{C}) \geq 0$
+      \item Causes private utility loss to diverted members, $\mathcal{L}(\mathcal{C}) \geq 0$
     \end{enumerate}
   \end{block}
   \medskip
@@ -516,18 +517,18 @@
   After Round 1: $\bshare_1 = \bshare_2 = \bshare_3 = 11.67$;\quad $\bshare_4 = 25$
 
   \medskip
-  \textbf{Round 2} --- $p_4$: $\mesrho(p_4) = 20$;\quad $p_2$: $\mesrho(p_2) = 18.3$.\\
+  \textbf{Round 2} --- $p_2$: $\mesrho(p_2) = 18.3$;\quad $p_4$: $\mesrho(p_4) = 20$.\\
   $p_3$: total available $= 2 \times 11.67 = 23.3 < 50$ --- \emph{not affordable}.\\
-  \textcolor{mesdark}{$\to$ Fund $p_4$ (smallest $\mesrho$).} Deduct 20 from $i=4$.
-  Now $\bshare_4 = 5$.
+  \textcolor{mesdark}{$\to$ Fund $p_2$ (smallest $\mesrho$).} $i=3$ pays 11.67, $i=4$ pays 18.33.
+  Now $\bshare_3 = 0$;\; $\bshare_4 = 6.67$.
 
   \medskip
-  \textbf{Round 3} --- $p_2$: available $= 11.67 + 5 = 16.67 < 30$ --- not affordable.\\
+  \textbf{Round 3} --- $p_4$: only $i=4$ left, $\bshare_4 = 6.67 < 20$ --- not affordable.\\
   $p_3$: not affordable.\quad \textbf{Stop.}
 
   \medskip
-  \textbf{Completion:} Remaining budget $= 40$.
-  Fund $p_2$ (cost 30) greedily. Final: $W = \{p_1, p_2, p_4\}$.
+  \textbf{Completion:} Remaining budget $= 30$.
+  Fund $p_4$ (cost 20) greedily. Final: $W = \{p_1, p_2, p_4\}$.
 
   \medskip
   \begin{exampleblock}{}
@@ -578,20 +579,20 @@
 
 \begin{frame}[shrink=15]{MES and Geographic Equity \textit{(Equidad Geográfica)}}
   \begin{block}{Proposition (Geographic Equity via EJR)}
-    Let $\bdist_d = n_d/n$ be district $d$'s population share.
-    Under MES, the funded set $W$ satisfies:
+    Let $\bdist_d = n_d/n$ be district $d$'s population share. If the committed residents of district
+    $d$ \emph{commonly approve} a local bundle worth $\bdist_d\budget$, then under MES the funded set
+    $W$ satisfies:
     \[
-      \sum_{p \in W \cap \Pset^d} \cost(p) \;\geq\; \bdist_d \cdot \budget
+      \sum_{p \in W \cap \Pset^d} \cost(p) \;\geq\; \bdist_d \cdot \budget .
     \]
-    for every district with committed residents.
   \end{block}
   \medskip
   \begin{itemize}
-    \item Every district gets \textbf{at least its proportional budget share} --- guaranteed
+    \item Every such district gets \textbf{at least its proportional budget share} --- guaranteed
     \item This is \textbf{structural} (follows from EJR): holds regardless of what other voters do
     \item Contrast with DEM: equity depends on committed residents happening to form a large enough bloc
-    \item Can be \textbf{strengthened}: weight $\bshare_i$ by CONAPO marginalization index
-      --- voters from high-marginalization \textit{colonias} receive larger shares
+    \item If local preferences are heterogeneous, the floor is the largest \emph{commonly-approved}
+      bundle --- still $>0$, still beats the UAM's $\beta=0$
   \end{itemize}
 \end{frame}
 
@@ -611,9 +612,35 @@
   \end{itemize}
   \medskip
   \begin{block}{}
-    The DEM also fails strategy-proofness (Gibbard-Satterthwaite applies).\\
+    The DEM also fails strategy-proofness (its district-selection stage is directly manipulable).\\
     Both mechanisms lose on the same criterion --- MES wins on everything else.
   \end{block}
+  \medskip
+  \footnotesize\emph{In practice the manipulation needs detailed knowledge of others' ballots and is
+  risky --- low-stakes at scale.}
+\end{frame}
+
+\begin{frame}[shrink=15]{Two More Honest Limitations \textit{(Otras Limitaciones)}}
+  \begin{block}{The completion gap}
+    MES often \textbf{stops before spending the whole budget}: once no project is affordable to its
+    backers, a \emph{completion} step (greedy by approvals) places the rest --- with \textbf{none} of
+    the EJR guarantee.
+  \end{block}
+  \begin{itemize}
+    \item The gap depends on project costs vs.\ the per-voter share $\bshare_i=\budget/n$:
+      many small projects $\to$ the proportional phase reaches far; few expensive projects $\to$
+      completion dominates
+    \item \textbf{Design lever:} keep project cost tiers small relative to $\budget/n$
+  \end{itemize}
+  \medskip
+  \begin{block}{Ballot complexity}
+    MES asks voters to consider \emph{all} projects city-wide, not just one district's.
+  \end{block}
+  \begin{itemize}
+    \item With 50+ projects this is a real cognitive load; thin ballots waste a voter's share
+    \item \textbf{Mitigation:} a grouped ballot interface with a live ``budget impact'' indicator ---
+      richer than the DEM, still tractable
+  \end{itemize}
 \end{frame}
 
 % ══════════════════════════════════════════════════════════════════════
@@ -639,7 +666,7 @@
   \end{center}
   \medskip
   \cMES{MES \textbf{strictly dominates}} both alternatives on every property
-  except strategy-proofness --- which no non-dictatorial mechanism can satisfy here.
+  except strategy-proofness --- which no proportional (EJR) mechanism can satisfy \citep{peters2021}.
 \end{frame}
 
 \begin{frame}{300-Voter Comparison: Setup \textit{(Escenario a Escala Durango)}}
@@ -697,11 +724,6 @@
         \item Geographic equity is achieved structurally, not by restriction
         \item Implementation is straightforward: voters mark projects they support
       \end{itemize}
-    \item \textbf{Weight budget shares by the CONAPO marginalization index}
-      \begin{itemize}
-        \item Voters from high-marginalization \textit{colonias} receive larger $\bshare_i$
-        \item Strengthens the geographic equity guarantee for the most vulnerable districts
-      \end{itemize}
     \item \textbf{Invest in project-level information campaigns}
       \begin{itemize}
         \item MES rewards informed voters: more $\info_i(p)=1$ entries $\to$ better outcomes
@@ -752,7 +774,6 @@
       for marginalized districts
     \item The \cMES{Method of Equal Shares} resolves all five distortions while providing
       \textbf{structural} geographic equity via EJR
-    \item A CONAPO-weighted MES is feasible and improves on the DEM on every dimension
     \item A counterfactual simulation on Durango 2025 data shows that MES applied to
       DEM-constrained ballots \textbf{replicates the distortion} --- confirming that
       full welfare gains require reforming \emph{both} the mechanism and the ballot format

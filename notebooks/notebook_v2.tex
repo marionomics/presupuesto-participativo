@@ -1,0 +1,1681 @@
+\documentclass[11pt,letterpaper]{article}
+
+% ── geometry & layout ────────────────────────────────────────────────
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{setspace}
+\onehalfspacing
+
+% ── math ─────────────────────────────────────────────────────────────
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[T1]{fontenc}
+
+% ── colour & boxes ───────────────────────────────────────────────────
+\usepackage[dvipsnames]{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\usepackage{booktabs,array,tabularx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathreplacing,matrix}
+\usepackage[colorlinks=true,linkcolor=MidnightBlue,citecolor=OliveGreen,urlcolor=BrickRed]{hyperref}
+
+% ── theorem environments ─────────────────────────────────────────────
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{example}{Example}[section]
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}{Proposition}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{corollary}{Corollary}[section]
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+
+% ── macros (match paper/preamble.tex) ────────────────────────────────
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\D}{\mathcal{D}}
+\newcommand{\Pset}{\mathcal{P}}
+\newcommand{\agents}{N}
+\newcommand{\votes}{v}
+\newcommand{\budget}{B}
+\newcommand{\cost}{c}
+\newcommand{\type}{\theta}
+\newcommand{\typespace}{\Theta}
+\newcommand{\outcomes}{X}
+\newcommand{\scf}{f}
+\newcommand{\DEM}{\text{DEM}}
+\newcommand{\UAM}{\text{UAM}}
+\newcommand{\MES}{\text{MES}}
+\newcommand{\mesrho}{\varrho}      % MES per-supporter cap; never \rho
+\newcommand{\salience}{\alpha}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+% ── citation fallbacks (standalone, no .bib) ─────────────────────────
+\providecommand{\citet}[1]{Peters, Pierczy\'nski \& Skowron (2021)}
+\providecommand{\citep}[1]{(Peters, Pierczy\'nski \& Skowron 2021)}
+\providecommand{\citealp}[1]{Peters, Pierczy\'nski \& Skowron 2021}
+
+% ── pedagogical boxes ────────────────────────────────────────────────
+\newtcolorbox{keyidea}{colback=OliveGreen!6,colframe=OliveGreen!65,
+  fonttitle=\bfseries,title={Key idea},boxsep=2pt,left=5pt,right=5pt,top=3pt,bottom=3pt}
+\newtcolorbox{intuition}{colback=MidnightBlue!5,colframe=MidnightBlue!60,
+  fonttitle=\bfseries,title={Intuition},boxsep=2pt,left=5pt,right=5pt,top=3pt,bottom=3pt}
+\newtcolorbox{connection}{colback=TealBlue!6,colframe=TealBlue!60,
+  fonttitle=\bfseries,title={Connection to Durango},boxsep=2pt,left=5pt,right=5pt,top=3pt,bottom=3pt}
+\newtcolorbox{naming}{colback=Violet!6,colframe=Violet!65,
+  fonttitle=\bfseries,title={A name we are introducing (our label, not standard terminology)},
+  boxsep=2pt,left=5pt,right=5pt,top=3pt,bottom=3pt}
+\newtcolorbox{watchout}{colback=BrickRed!5,colframe=BrickRed!60,
+  fonttitle=\bfseries,title={Watch out --- a subtle point that is easy to get wrong},
+  boxsep=2pt,left=5pt,right=5pt,top=3pt,bottom=3pt}
+\newtcolorbox{aside}{colback=Dandelion!8,colframe=Dandelion!80!black,
+  boxsep=2pt,left=5pt,right=5pt,top=3pt,bottom=3pt}
+
+% ── header ───────────────────────────────────────────────────────────
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\textit{Working Notebook, v2 --- combined \& corrected}}
+\fancyhead[R]{\small\textit{Mechanism Design for Participatory Budgeting}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\title{%
+  \vspace{-0.8cm}
+  {\large\scshape Working Notebook --- Second Edition (combined \& corrected)}\\[0.6em]
+  {\LARGE\bfseries Mechanism Design for\\[0.2em] Participatory Budgeting}\\[0.5em]
+  {\large From first principles to the Method of Equal Shares,\\[0.2em]
+  with full motivations and worked examples}
+}
+\author{\textbf{Mario Alberto Garc\'ia Meza}\\[2pt]
+  \small Facultad de Econom\'ia, Contadur\'ia y Administraci\'on\\
+  \small Universidad Ju\'arez del Estado de Durango (FECA--UJED)}
+\date{June 2026 \;\textbullet\; Self-study \& writing companion}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\begin{abstract}
+\noindent This notebook rebuilds, in a single volume, the theory behind our paper on
+Durango's participatory budgeting. It starts from the basics of mechanism design, develops
+the formal model of the city's voting rule, proves the propositions that diagnose what goes
+wrong, introduces the Method of Equal Shares as a remedy, and closes with how we will test
+everything in simulation. It is written for an economist who knows this material but has been
+away from it for a while: every result comes with motivation, intuition, and a worked example.
+It supersedes the three earlier working notebooks, folding in every correction from the
+mathematical review.
+\end{abstract}
+
+\begin{aside}
+\small\textbf{How to read this, and three conventions.}
+\textbf{(1) Boxes.} Green boxes hold the load-bearing idea; blue boxes give intuition; teal
+boxes connect the abstract result to Durango; \emph{red ``Watch out'' boxes} flag a subtle
+point that is genuinely easy to get wrong (these are where the corrections from the review
+live). \textbf{(2) Names.} Some terms are standard and cited; others are labels we are coining
+for this project, and these are always introduced explicitly in a violet ``A name we are
+introducing'' box, so you can always tell ours from the literature's. In particular, the
+\emph{Method of Equal Shares} and \emph{Extended Justified Representation} are established
+(\citealp{peters2021}); the \emph{District-Exclusivity Mechanism} and \emph{Unrestricted
+Allocation Mechanism} are our labels. \textbf{(3) Notation.} We follow \texttt{paper/preamble.tex};
+the only trap is that the Method of Equal Shares' per-supporter cost cap is written $\mesrho$
+(\texttt{\textbackslash mesrho}), never $\rho$, which clashes with a built-in.
+\end{aside}
+
+\tableofcontents
+\newpage
+
+% ═════════════════════════════════════════════════════════════════════
+\section{What mechanism design is, and why we need it}
+\label{sec:what}
+% ═════════════════════════════════════════════════════════════════════
+
+Start with the problem a city government actually faces. Durango wants to spend a fixed pot of
+public money on the neighbourhood projects its citizens care about most. The trouble is that
+the government does not know how much people care. That information --- who values a new park,
+who needs the drainage fixed, how badly --- lives inside people's heads. The only way to get
+at it is to \emph{ask}, through some voting or reporting procedure. And the moment you ask,
+people may answer strategically: they may exaggerate, coordinate, or game whatever rule you
+set up.
+
+\begin{keyidea}
+Game theory and mechanism design ask mirror-image questions.
+Game theory: \emph{the rules are fixed --- what will people do?}
+Mechanism design: \emph{the goal is fixed --- what rules will make people's behaviour produce it?}
+We are squarely in the second business. The voting rule \emph{is} the mechanism, and our
+question is whether Durango's rule produces good outcomes, and if not, what rule would.
+\end{keyidea}
+
+The field was launched by Hurwicz and developed by Maskin and Myerson (the 2007 Nobel). We
+will need only its first principles, but we will need them precisely, because the whole
+argument of the paper is that Durango's rule fails a specific, nameable list of those
+principles.
+
+\begin{connection}
+Throughout, keep one concrete picture in mind. You go to vote in the \emph{presupuesto
+participativo}. You care about one project --- say, the university's --- and you are handed six
+votes and a ballot listing many projects you have never heard of, all of them in a single
+district you must commit to up front. What you would \emph{like} to express (``fund this one
+thing I know about, across town from where I live'') is not something the ballot lets you say.
+That mismatch between what you know and what the rule lets you report is the seed of everything
+that follows.
+\end{connection}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{The environment: agents, types, outcomes}
+% ─────────────────────────────────────────────────────────────────────
+
+We build the machinery one piece at a time. Every definition here is used later, so it is
+worth going slowly.
+
+\begin{definition}[Environment]
+\label{def:environment}
+An \textbf{environment} consists of:
+\begin{enumerate}[label=(\roman*),nosep]
+  \item a finite set of \textbf{agents} $\agents=\{1,\dots,n\}$;
+  \item for each agent $i$, a set of possible \textbf{types} $\typespace_i$; a type
+        $\type_i\in\typespace_i$ encodes $i$'s private information. The set of type profiles is
+        $\typespace=\typespace_1\times\cdots\times\typespace_n$;
+  \item a set of \textbf{outcomes} $\outcomes$;
+  \item for each agent $i$, a \textbf{utility function} $u_i:\outcomes\times\typespace_i\to\R$.
+\end{enumerate}
+We write $\type_{-i}=(\type_1,\dots,\type_{i-1},\type_{i+1},\dots,\type_n)$ for everyone's type
+but $i$'s, so a profile is $\type=(\type_i,\type_{-i})$.
+\end{definition}
+
+\begin{intuition}
+The \emph{type} is the whole source of difficulty. It is what the agent knows and the planner
+does not. In an auction your type is your valuation; in voting it is your preferences. If types
+were public there would be no problem --- the planner would just compute the best outcome. Every
+hard question in this notebook traces back to types being private.
+\end{intuition}
+
+\begin{connection}
+For us the agents are Durango's voters, the outcomes are sets of funded projects (within
+budget), and the utility is how much a voter benefits from a given funded set. But our type
+will carry an extra dimension that standard models omit: not just \emph{how much} a voter values
+each project, but \emph{whether they know enough to value it at all}. We return to this in
+Section~\ref{sec:model}; flag it now as the thing that makes our model richer than the textbook.
+\end{connection}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{Social choice functions: what the planner would do if she knew everything}
+% ─────────────────────────────────────────────────────────────────────
+
+\begin{definition}[Social choice function]
+\label{def:scf}
+A \textbf{social choice function} (SCF) is a map $\scf:\typespace\to\outcomes$. It says: if the
+planner knew the true type profile $\type$, she would choose outcome $\scf(\type)$.
+\end{definition}
+
+\noindent Two SCFs are worth naming because they bracket the equity debate that runs through
+the paper.
+
+\begin{example}[Utilitarian SCF]
+\label{ex:util}
+$\scf^{\text{util}}(\type)=\argmax_{x\in\outcomes}\sum_{i}u_i(x,\type_i)$: pick the outcome
+maximising total utility. This is the natural ``fund what people value most in total'' benchmark.
+\end{example}
+
+\begin{example}[Rawlsian SCF]
+\label{ex:rawls}
+$\scf^{\text{Rawls}}(\type)=\argmax_{x\in\outcomes}\min_i u_i(x,\type_i)$: maximise the
+worst-off agent's utility. This speaks to the worry about marginalised districts --- even if
+total welfare is maximised by funding the city centre, a maximin planner would refuse to leave
+a peripheral neighbourhood with nothing.
+\end{example}
+
+\begin{connection}
+The paper does not have to choose one of these. Its point is subtler: the \emph{current rule}
+sacrifices utilitarian efficiency, while a naive fix sacrifices the Rawlsian/equity concern,
+and a well-designed rule can respect both. Holding these two SCFs in mind keeps that tension in
+view.
+\end{connection}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{Mechanisms: the rules of the game}
+% ─────────────────────────────────────────────────────────────────────
+
+\begin{definition}[Mechanism]
+\label{def:mechanism}
+A \textbf{mechanism} is a pair $(\mathcal{M},g)$ where $\mathcal{M}=M_1\times\cdots\times M_n$
+is the \textbf{message space} (agent $i$ sends $m_i\in M_i$) and $g:\mathcal{M}\to\outcomes$ is
+the \textbf{outcome function}. A mechanism is \textbf{direct} if $M_i=\typespace_i$ --- agents
+simply report a type.
+\end{definition}
+
+A mechanism turns the environment into a game: everyone sends a message, and $g$ converts the
+messages into an outcome.
+
+\begin{example}[Durango's rule as a mechanism]
+\label{ex:durango}
+The message of voter $i$ is a pair: a district $d_i$ (one must be chosen) and an allocation of
+$\votes$ votes among the projects of that district. The outcome function adds up the votes each
+project receives, ranks projects by total votes, and funds them top-down until the budget runs
+out. This is \emph{not} a direct mechanism: a voter never reports their preferences over all
+projects, only a district and a within-district allocation.
+\end{example}
+
+\begin{watchout}
+The compression in Example~\ref{ex:durango} is the root of the entire paper. The message space
+$M_i$ is dramatically smaller than the type space $\typespace_i$: a voter who cares about
+projects in three districts can speak about only one. \textbf{Information is lost at the moment
+of reporting, before any votes are even counted.} Most analyses of voting focus on how votes
+are aggregated; our focus is one step earlier, on what the ballot does not let you say.
+\end{watchout}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{Dominant strategies and implementation}
+% ─────────────────────────────────────────────────────────────────────
+
+When does a mechanism actually deliver the SCF the planner wanted? The strongest answer:
+
+\begin{definition}[Dominant strategy]
+\label{def:dominant}
+A strategy $s_i^*:\typespace_i\to M_i$ is \textbf{dominant} for $i$ if, for every type $\type_i$
+and every message profile $m_{-i}$ of the others,
+\[
+  u_i\bigl(g(s_i^*(\type_i),m_{-i}),\type_i\bigr)\ \ge\ u_i\bigl(g(m_i,m_{-i}),\type_i\bigr)
+  \qquad\text{for all } m_i\in M_i.
+\]
+That is, $s_i^*(\type_i)$ is optimal no matter what anyone else does.
+\end{definition}
+
+\begin{definition}[Implementation in dominant strategies]
+\label{def:implementation}
+A mechanism $(\mathcal{M},g)$ \textbf{implements} the SCF $\scf$ in dominant strategies if there
+is a dominant-strategy profile $s^*=(s_1^*,\dots,s_n^*)$ with $g(s^*(\type))=\scf(\type)$ for all
+$\type$.
+\end{definition}
+
+\begin{intuition}
+Dominant-strategy implementation is the gold standard because it asks nothing of the agents'
+beliefs: whatever you think others will do, your best move is $s_i^*$, and when everyone plays
+that way the planner gets exactly what she wanted. No coordination, no second-guessing.
+\end{intuition}
+
+\begin{connection}
+Durango's rule already fails this badly, and the reason is instructive. Your best district
+depends on what you expect others to do --- join the big bloc forming in district $A$, or stay in
+your home district $B$ where your marginal vote counts for more? A rule whose best play depends
+on your forecast of everyone else has no dominant strategies. We will make this precise as a
+\emph{coordination game} in Section~\ref{sec:distortions}.
+\end{connection}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{Incentive compatibility}
+% ─────────────────────────────────────────────────────────────────────
+
+The honesty version of the same idea:
+
+\begin{definition}[DSIC and BIC]
+\label{def:ic}
+An SCF $\scf$ is \textbf{dominant-strategy incentive compatible (DSIC)}, or
+\textbf{strategy-proof}, if for all $i$, all true $\type_i$, all misreports $\hat\type_i$, and
+all $\type_{-i}$,
+\[
+  u_i\bigl(\scf(\type_i,\type_{-i}),\type_i\bigr)\ \ge\ u_i\bigl(\scf(\hat\type_i,\type_{-i}),\type_i\bigr).
+\]
+It is \textbf{Bayesian incentive compatible (BIC)} if truth-telling is optimal only in
+expectation over $\type_{-i}$ (given a common prior).
+\end{definition}
+
+\begin{remark}
+DSIC is stronger than BIC: ``best no matter what'' implies ``best on average.'' DSIC is what we
+would love to have, because it frees voters from having to model each other. As the next two
+sections show, it is also usually impossible --- which is why the paper does not pretend to
+deliver it, and is honest about that.
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{The Revelation Principle}
+% ─────────────────────────────────────────────────────────────────────
+
+Here is the result that makes the whole subject tractable: it lets us stop searching over the
+infinitely many possible message spaces.
+
+\begin{theorem}[Revelation Principle; Myerson 1981]
+\label{thm:revelation}
+If some mechanism implements an SCF $\scf$ in dominant strategies, then the \emph{direct}
+mechanism in which agents report types and truth-telling is dominant also implements $\scf$.
+\end{theorem}
+
+\begin{proof}
+Let $(\mathcal{M},g)$ implement $\scf$ with dominant profile $s^*$, so $g(s^*(\type))=\scf(\type)$
+for all $\type$. Build a direct mechanism $g':\typespace\to\outcomes$ by
+\[
+  g'(\hat\type)=g\bigl(s^*(\hat\type)\bigr)=g\bigl(s_1^*(\hat\type_1),\dots,s_n^*(\hat\type_n)\bigr):
+\]
+it reads reported types, runs them through the equilibrium strategies, and feeds the result to
+the original $g$.
+
+\smallskip\noindent\emph{Claim: truth-telling is dominant in $(\typespace,g')$.}
+Fix agent $i$ with true type $\type_i$ and any reports $\hat\type_{-i}$ of the others, and set
+$m_{-i}'=s_{-i}^*(\hat\type_{-i})$. Telling the truth yields
+$u_i\bigl(g(s_i^*(\type_i),m_{-i}'),\type_i\bigr)$, while reporting $\hat\type_i$ yields
+$u_i\bigl(g(s_i^*(\hat\type_i),m_{-i}'),\type_i\bigr)$. Because $s_i^*$ is dominant in the
+original mechanism, the first is at least the second (apply Definition~\ref{def:dominant} with
+$m_i=s_i^*(\hat\type_i)$). So no misreport helps. Finally, when everyone is truthful,
+$g'(\type)=g(s^*(\type))=\scf(\type)$.
+\end{proof}
+
+\begin{keyidea}
+The trick is \emph{simulation}: the direct mechanism quietly plays the old equilibrium strategy
+on your behalf. If you could not beat $s_i^*$ by sending a different message, you cannot beat
+truth-telling by reporting a different type. The pay-off: to ask ``is this goal achievable?'' we
+only ever have to check whether honesty is incentive-compatible in a direct mechanism --- we do
+not have to invent clever message spaces.
+\end{keyidea}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{Gibbard--Satterthwaite, and why it is only a backdrop here}
+% ─────────────────────────────────────────────────────────────────────
+
+The Revelation Principle says ``check honesty in direct mechanisms.'' The next theorem says that
+this check almost always fails.
+
+\begin{theorem}[Gibbard 1973; Satterthwaite 1975]
+\label{thm:gs}
+Let $|\outcomes|\ge3$. If $\scf:\typespace\to\outcomes$ is surjective and DSIC over an
+\emph{unrestricted} domain of preferences, then $\scf$ is \textbf{dictatorial}: there is an agent
+$j$ whose top choice is always selected.
+\end{theorem}
+
+The full proof is long and combinatorial (it is in Mas-Colell, Whinston \& Green, ch.~23, which we
+cite rather than reproduce). The engine of it is one lemma, which is worth proving because it is
+clean and you will recognise it elsewhere.
+
+\begin{lemma}[DSIC $\Rightarrow$ monotonicity]
+\label{lem:mono}
+Say $\scf$ is \textbf{monotone} if, whenever $\scf(\type)=x$ and we change one agent's type from
+$\type_i$ to $\type_i'$ in a way that does not push $x$ down in $i$'s ranking (anything below $x$
+stays below $x$), then $\scf(\type_i',\type_{-i})=x$. If $\scf$ is DSIC, it is monotone.
+\end{lemma}
+
+\begin{proof}
+Let $y=\scf(\type_i',\type_{-i})$. DSIC at the true type $\type_i$ gives
+$u_i(x,\type_i)\ge u_i(y,\type_i)$, so $y$ sits weakly below $x$ under $\type_i$. Because $x$ did
+not fall when we moved to $\type_i'$, $y$ stays weakly below $x$ there too:
+$u_i(x,\type_i')\ge u_i(y,\type_i')$. But DSIC at the true type $\type_i'$ gives the reverse,
+$u_i(y,\type_i')\ge u_i(x,\type_i')$. Hence $u_i(x,\type_i')=u_i(y,\type_i')$, and with strict
+preferences this forces $y=x$.
+\end{proof}
+
+\noindent The rest of the argument shows that monotonicity plus surjectivity, pushed across all
+pairs of outcomes and all agents, makes some single agent pivotal for everything --- a dictator.
+
+\begin{watchout}
+It is tempting to wield Gibbard--Satterthwaite as a club: ``no good voting rule is
+strategy-proof, end of story.'' But read the hypothesis: it needs an \emph{unrestricted} domain
+over $\ge 3$ outcomes. Our participatory-budgeting domain is \emph{restricted} --- utilities are
+additive across projects, outcomes must fit a budget, and projects sit in a district structure.
+On restricted domains the theorem simply does not apply, and that is exactly the crack through
+which proportional rules like the Method of Equal Shares climb. So in this notebook GS is
+\emph{motivation only}: it explains why we should not expect, or promise, strategy-proofness. The
+sharp impossibility we actually invoke later (for the Method of Equal Shares specifically) is a
+different, domain-appropriate result of \citet{peters2021}. \textbf{Never say ``GS implies the
+Method of Equal Shares is manipulable''} --- that conflates two different theorems.
+\end{watchout}
+
+\begin{connection}
+The lesson for the paper's framing: do not over-promise. The current rule is not bad because it
+fails some unreachable ideal of strategy-proofness; \emph{nothing} reachable is
+strategy-proof here. It is bad for concrete, fixable reasons --- truncation, noise, coordination,
+capture --- which we now make precise, and which a better rule can address even though it, too,
+will not be strategy-proof.
+\end{connection}
+
+% ═════════════════════════════════════════════════════════════════════
+\section{The participatory budgeting model}
+\label{sec:model}
+% ═════════════════════════════════════════════════════════════════════
+
+Now we specialise the general machinery to Durango. Everything in Section~\ref{sec:what} was
+textbook; from here on the objects are ours, built to capture the two features that make this
+problem distinctive: voters who only know about part of the ballot, and a city geography that
+the rule treats as a hard partition.
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{The environment}
+% ─────────────────────────────────────────────────────────────────────
+
+\begin{definition}[Participatory budgeting environment]
+\label{def:pb}
+A \textbf{participatory budgeting environment} is a tuple
+$\langle\agents,\D,\Pset,\budget,\votes,u,\sigma\rangle$ where:
+\begin{enumerate}[label=(\roman*),nosep]
+  \item $\agents=\{1,\dots,n\}$ is the set of \textbf{voters};
+  \item $\D=\{1,\dots,m\}$ is the set of \textbf{districts};
+  \item $\Pset=\bigcup_{d\in\D}\Pset^d$ is the set of \textbf{projects}, where $\Pset^d$ are the
+        projects of district $d$ and $\Pset^d\cap\Pset^{d'}=\emptyset$ for $d\ne d'$ (each project
+        belongs to exactly one district); each project $p$ has a cost $\cost(p)>0$;
+  \item $\budget>0$ is the total \textbf{budget};
+  \item $\votes\in\mathbb{N}$ is the \textbf{vote endowment} per voter (Durango uses $\votes=6$);
+  \item $u_i:\Pset\to\R_{\ge0}$ is voter $i$'s \textbf{utility} over individual projects, extended
+        to funded sets by \textbf{additive separability}: $U_i(S)=\sum_{p\in S}u_i(p)$;
+  \item $\sigma_i:\Pset\to\{0,1\}$ is voter $i$'s \textbf{information function}: $\sigma_i(p)=1$
+        iff $i$ knows enough about $p$ to form a genuine preference, and $0$ otherwise.
+\end{enumerate}
+The full type of voter $i$ is the pair $\type_i=(u_i,\sigma_i)$ --- preferences \emph{and} information.
+\end{definition}
+
+\begin{keyidea}
+Two modelling choices do all the work later, so notice them now.
+\textbf{(1) The information function $\sigma_i$.} Standard PB models silently assume
+$\sigma_i\equiv1$: everyone can evaluate everything. Real voters cannot. Encoding ``do you even
+know this project?'' separately from ``how much would you value it?'' is what lets us talk about
+\emph{noise} (Prop.~\ref{prop:noise}) and \emph{salience} (Prop.~\ref{prop:equity}). This connects
+to Downs' rational ignorance and to costly information acquisition in voting (Martinelli 2006).
+\textbf{(2) The disjoint districts.} Because $\Pset^d\cap\Pset^{d'}=\emptyset$, a voter who
+``enters'' district $d$ can touch \emph{no} project elsewhere. That single partition is the
+structural fact from which all five distortions flow.
+\end{keyidea}
+
+\begin{remark}[On additive separability]
+$U_i(S)=\sum_{p\in S}u_i(p)$ assumes no complementarity or substitution across projects (a new
+park and a new road are valued independently). It is a genuine restriction, but it is standard in
+the PB literature and it is what makes welfare bookkeeping tractable. State it honestly as an
+assumption in the paper rather than hiding it.
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{The current rule, named}
+% ─────────────────────────────────────────────────────────────────────
+
+\begin{naming}
+We need a short name for Durango's actual rule. The literature has no standard term for it, so we
+coin one: the \textbf{District-Exclusivity Mechanism}, abbreviated \textbf{DEM}. ``Exclusivity''
+because a voter is locked into a single district; nothing about the name is borrowed from
+elsewhere --- whenever you see ``DEM'' it means precisely the rule in Definition~\ref{def:dem}.
+\end{naming}
+
+\begin{definition}[District-Exclusivity Mechanism, DEM]
+\label{def:dem}
+Under the \textbf{DEM} each voter $i$ submits a message in two parts: a district $d_i\in\D$, and a
+vote allocation $\mathbf{x}_i=(x_{i,p})_{p\in\Pset^{d_i}}$ with $x_{i,p}\ge0$ and
+$\sum_{p\in\Pset^{d_i}}x_{i,p}=\votes$. The total vote of project $p$ is
+$V(p)=\sum_{i:\,d_i=d(p)}x_{i,p}$, where $d(p)$ is $p$'s district. Projects are ranked by $V(p)$
+and funded greedily --- highest first --- until the budget $\budget$ cannot afford the next one.
+\end{definition}
+
+\begin{remark}
+The DEM is not a direct mechanism (it does not elicit the full type), and its message space
+$M_i^{\DEM}=\{(d,\mathbf{x}):d\in\D,\ \mathbf{x}\text{ an allocation of }\votes\text{ over }\Pset^d\}$
+is far smaller than the type space. This is the formal restatement of the ``compression'' warning
+from Example~\ref{ex:durango}.
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{The obvious alternative, named}
+% ─────────────────────────────────────────────────────────────────────
+
+The first thing anyone proposes on seeing the DEM is ``just drop the district lock-in.'' We will
+need that strawman as a benchmark, so we name it too.
+
+\begin{naming}
+We call the rule that keeps everything about the DEM \emph{except} the district restriction the
+\textbf{Unrestricted Allocation Mechanism}, abbreviated \textbf{UAM}. Again this is our label, not
+a term from the literature. Its role in the paper is to be the tempting-but-flawed benchmark: it
+fixes the efficiency problems and then fails on equity (Prop.~\ref{prop:equity}).
+\end{naming}
+
+\begin{definition}[Unrestricted Allocation Mechanism, UAM]
+\label{def:uam}
+The \textbf{UAM} is identical to the DEM except that there is no district-selection step: voter
+$i$ allocates $\votes$ votes over \emph{all} projects, $\mathbf{x}_i=(x_{i,p})_{p\in\Pset}$ with
+$x_{i,p}\ge0$ and $\sum_{p\in\Pset}x_{i,p}=\votes$. The greedy funding rule is unchanged.
+\end{definition}
+
+\begin{remark}
+Every feasible DEM allocation is also a feasible UAM allocation (the special case where all of a
+voter's votes happen to land in one district). So the DEM's reachable vote profiles are contained
+in the UAM's --- a fact we use directly in Proposition~\ref{prop:trunc}.
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{How a voter votes: sincere and informed-sincere}
+% ─────────────────────────────────────────────────────────────────────
+
+To compare rules cleanly, we sometimes hold behaviour fixed at a simple, honest benchmark and ask
+what the \emph{rule} does. That benchmark is sincere voting.
+
+\begin{definition}[Sincere and informed-sincere voting]
+\label{def:sincere}
+Under \textbf{sincere voting} a voter spreads votes in proportion to utility over the projects the
+rule lets them touch:
+\[
+  x_{i,p}^{\text{sincere}}=\votes\cdot\frac{u_i(p)}{\sum_{q}u_i(q)},
+\]
+the sum running over $\Pset^{d_i}$ under the DEM and over all of $\Pset$ under the UAM. Under
+\textbf{informed-sincere voting} the same formula is restricted to known projects
+$\{q:\sigma_i(q)=1\}$. Under the DEM a voter who knows only a few of their district's projects
+still has $\votes$ votes to cast; the leftover votes that cannot stay on known projects are forced
+onto unknown ones --- the \emph{noise} we study in Proposition~\ref{prop:noise}.
+\end{definition}
+
+\begin{watchout}
+Sincere voting is an \emph{assumption about behaviour}, not a prediction of equilibrium. We use it
+to isolate the effect of the rule's constraints from the effect of strategic play. When we later
+turn to strategy (Propositions~\ref{prop:coord} and~\ref{prop:mob}) we drop it. Be explicit in the
+paper about which mode each result assumes --- mixing them up is a common way to state a result more
+strongly than it has been proved.
+\end{watchout}
+
+\begin{aside}\small
+\textbf{A convention we adopt once: divisible votes.} The sincere formula returns real numbers,
+which need not be whole votes. Rather than litter the analysis with rounding, we treat votes as
+divisible ($x_{i,p}\in\R_{\ge0}$, $\sum_p x_{i,p}=\votes$) throughout the theory; this is standard
+and the propositions concern vote \emph{shares}, which rounding does not disturb qualitatively.
+Integer ballots ($\votes=6$) re-enter only in the simulation (Section~\ref{sec:sim}), which uses
+the real format.
+\end{aside}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{Salience: how visible a district is}
+% ─────────────────────────────────────────────────────────────────────
+
+The information function lets us measure something the equity argument will hinge on: how many
+voters even know a district exists, project-wise.
+
+\begin{naming}
+We call the following quantity the \textbf{salience} of a district. The word is ours (a label for
+$\salience_d$ below); the underlying idea --- that visibility, not value, can drive vote totals --- is
+the substance.
+\end{naming}
+
+\begin{definition}[District salience]
+\label{def:salience}
+The \textbf{salience} of district $d$ is the fraction of voters informed about at least one of its
+projects:
+\[
+  \salience_d=\frac{\bigl|\{i\in\agents:\exists\,p\in\Pset^d\text{ with }\sigma_i(p)=1\}\bigr|}{n}.
+\]
+\end{definition}
+
+\begin{watchout}
+Salience is built from $\sigma$ (information), \emph{not} from $u$ (value). A glossy city-centre
+project can be high-salience and low-value; a vital drainage project in a poor neighbourhood can be
+high-value and low-salience. Keeping these two apart is the whole hinge of Proposition~\ref{prop:equity}
+and of its reconciliation with Proposition~\ref{prop:trunc}. If you ever find yourself treating
+``more votes'' as ``more valued,'' stop --- that is precisely the inference the paper exists to refute.
+\end{watchout}
+
+\begin{aside}\small
+\textbf{A second convention: compare \emph{scope}, not raw message spaces.} It is tempting to write
+$M^{\DEM}\subsetneq M^{\UAM}\subsetneq M^{\MES}$ as if the three rules' message spaces nest. They do
+not nest cleanly --- the first two are spaces of \emph{numerical vote allocations}, while the Method
+of Equal Shares (Section~\ref{sec:mes}) uses \emph{approval sets}, a different kind of object. What
+genuinely nests is the \emph{scope of projects a voter can put weight on}: the DEM confines that
+scope to one district; the UAM opens it to the whole city; the Method of Equal Shares additionally
+removes the cap on how many projects you may back. We always make the comparison at the level of
+scope, never by pretending the message spaces are the same type of set.
+\end{aside}
+
+% ═════════════════════════════════════════════════════════════════════
+\section{Five ways the DEM distorts outcomes}
+\label{sec:distortions}
+% ═════════════════════════════════════════════════════════════════════
+
+This is the diagnostic heart of the paper. We prove five propositions, each isolating one way the
+district-exclusivity constraint degrades outcomes. The first two hold behaviour fixed at sincere
+voting (so they are about the \emph{rule}); the next two are about \emph{strategy} (so we let
+voters optimise); the fifth is the twist that stops the paper from being a one-line ``deregulate''
+argument.
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{Proposition 1: preference truncation}
+% ─────────────────────────────────────────────────────────────────────
+
+The cleanest failure first. A voter who cares about projects in two districts must abandon one of
+them at the ballot. We show this costs welfare --- but we have to be careful about \emph{in what
+sense}, because the obvious-looking proof is wrong.
+
+\begin{proposition}[Truncation: attainability and welfare]
+\label{prop:trunc}
+Assume at least two districts and at least one voter with \emph{cross-district preferences}:
+there are $p\in\Pset^d$ and $q\in\Pset^{d'}$ with $d\ne d'$ and $u_i(p),u_i(q)>0$. Then:
+\begin{enumerate}[label=\textup{(\roman*)},nosep]
+  \item \textbf{(Constraint effect.)} For any outcome rule $g$, the DEM's reachable vote profiles
+        are contained in the UAM's, $\mathbf{X}^{\DEM}\subseteq\mathbf{X}^{\UAM}$; hence the
+        \emph{best attainable} welfare is weakly higher under the UAM.
+  \item \textbf{(Truncation.)} Under full information ($\sigma\equiv1$) and sincere voting, the
+        DEM vote vector is a strict truncation of the UAM vote vector: it places zero weight on
+        every positively-valued project outside the chosen district.
+  \item \textbf{(Welfare, conditional.)} Under full information, sincere voting, \emph{and} an
+        outcome rule that funds the welfare-best feasible set given the submitted votes,
+        $W^{\DEM}\le W^{\UAM}$, with strict inequality whenever a cross-district voter is pivotal
+        at the budget cutoff.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+\textbf{(i)} Under the DEM a voter must zero out every project off the chosen district; under the
+UAM the only constraint is $\sum_{p\in\Pset}x_{i,p}=\votes$, $x_{i,p}\ge0$. Every DEM profile is a
+UAM profile (all weight in one district), so $\mathbf{X}^{\DEM}\subseteq\mathbf{X}^{\UAM}$.
+Maximising one and the same objective $W\circ g$ over a weakly larger set cannot lower the maximum.
+
+\smallskip\noindent\textbf{(ii)} With full information, sincere UAM voting gives
+$x_{i,p}^{\UAM}=\votes\,u_i(p)/\sum_{q\in\Pset}u_i(q)$ for every $p$, while sincere DEM voting gives
+$x_{i,p}^{\DEM}=\votes\,u_i(p)/\sum_{q\in\Pset^{d_i^*}}u_i(q)$ for $p\in\Pset^{d_i^*}$ and $0$
+otherwise, where $d_i^*=\argmax_d\sum_{p\in\Pset^d}u_i(p)$ is the district the sincere voter
+selects. A cross-district voter has some $q^*\notin\Pset^{d_i^*}$ with $u_i(q^*)>0$; there
+$x_{i,q^*}^{\DEM}=0<x_{i,q^*}^{\UAM}$. So the DEM vector is the UAM vector with all out-of-district
+weight deleted and the rest renormalised --- a strict truncation.
+
+\smallskip\noindent\textbf{(iii)} A welfare-respecting rule funds the welfare-best feasible set
+\emph{consistent with the votes it is handed}. By (ii) the UAM is handed a vector that tracks each
+voter's valuation over the whole city; the DEM is handed one that tracks valuation only inside
+$d_i^*$. The truncated profile is itself attainable under the UAM (part (i)), and it carries
+strictly less valuation information whenever a cross-district voter sits at the funding margin.
+Hence the DEM outcome is weakly --- and at a binding pivot strictly --- welfare-dominated.
+\end{proof}
+
+\begin{watchout}
+Here is the trap, and it is worth dwelling on because the ``natural'' proof is invalid.
+One is tempted to argue: ``$\mathbf{X}^{\DEM}\subseteq\mathbf{X}^{\UAM}$, so the UAM optimises over a
+bigger set, so $W^{\DEM}\le W^{\UAM}$, full stop.'' \emph{This does not follow.} Sincere voters do
+not optimise --- they land on one fixed point of the feasible set --- and the greedy-by-votes funding
+rule is \textbf{not monotone} in the vote vector: spreading the same support over more projects can
+push a good project \emph{below} the cutoff. So set-containment bounds the \emph{best attainable}
+welfare (part (i)); it does \emph{not}, by itself, rank the realised sincere outcomes. That is why
+part (iii) carries two hypotheses --- full information \emph{and} a welfare-respecting rule --- and
+why we keep the rigorous content (i)--(ii) separate from the welfare claim.
+
+And one phrase to avoid entirely: do \textbf{not} call the DEM outcome ``Pareto-inferior.''
+Pareto-inferior means \emph{every} voter is weakly worse off, which is false --- a voter whose
+favourite gets funded faster under the DEM's concentration can be strictly better off. The honest
+claim is about \emph{utilitarian} welfare, under stated conditions.
+\end{watchout}
+
+\begin{intuition}
+Strip away the formalism: the DEM forces a voter with three loves to publicly declare only one.
+Across a city where people live in one district, work in another, and study in a third, that is a
+lot of discarded information. Part (iii) says: when that discarded information would have changed
+who sits at the funding margin, total welfare falls. When it would not have mattered, it does not.
+\end{intuition}
+
+\begin{aside}\small
+This proposition is the ``easy'' one --- the low-hanging diagnosis. It also has a sting in its tail
+that we resolve only in Proposition~\ref{prop:equity}: the welfare ranking it states can
+\emph{reverse} once information is incomplete. Hold that thought; it is the pivot of the paper.
+\end{aside}
+
+\begin{example}[Truncation costs welfare --- with numbers]
+\label{ex:trunc}
+Two districts, full information, sincere voting; one vote per voter (divisible). District $A$ has a
+single project $a$ (cost $10$), district $B$ a single project $b$ (cost $10$), and the budget funds
+exactly one. The electorate:
+\begin{itemize}[nosep]
+  \item $6$ \emph{cross-district} voters with $u(a)=10$, $u(b)=9$;
+  \item $5$ \emph{local-$B$} voters with $u(b)=10$, $u(a)=0$.
+\end{itemize}
+\emph{Under the DEM.} A sincere voter enters the district of higher total utility. For the
+cross-district voters that is $A$ ($10>9$), so all six enter $A$ and put their vote on $a$; the five
+local voters enter $B$ and back $b$. Totals $V(a)=6$, $V(b)=5$; greedy funds $a$. Welfare
+$W^{\DEM}=\sum_i U_i(\{a\})=6(10)+5(0)=60$.
+\emph{Under the UAM.} The cross-district voters now split their single vote sincerely, $\tfrac{10}{19}$
+to $a$ and $\tfrac{9}{19}$ to $b$. So $V(a)=6\cdot\tfrac{10}{19}\approx3.16$ and
+$V(b)=6\cdot\tfrac{9}{19}+5\approx7.84$; greedy funds $b$. Welfare $W^{\UAM}=6(9)+5(10)=104$.
+\emph{Read-off.} Project $b$ is in fact the higher-welfare choice ($104$ versus $60$), but the DEM's
+district lock-in forced the six cross-district voters to pile all their weight onto $a$ --- funding the
+worse project. The truncation cost $104-60=44$ in utilitarian welfare.
+\end{example}
+
+\begin{remark}
+This is the \emph{well-behaved} case of Proposition~\ref{prop:trunc}: full information, and the greedy
+rule happens to fund the welfare-best project under the UAM. Remove full information and the ranking
+can flip --- which is precisely Proposition~\ref{prop:equity}. The example is meant to make the mechanism
+of part~(iii) tangible, not to suggest the welfare ranking is unconditional.
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{Proposition 2: noise injection}
+% ─────────────────────────────────────────────────────────────────────
+
+Now bring back incomplete information. You enter a district for the one project you know, but you
+hold $\votes$ votes and the ballot has many more projects. What happens to the rest of your votes?
+
+\begin{aside}\small
+\textbf{The noise model.} Write $I_i^d=\{p\in\Pset^d:\sigma_i(p)=1\}$ for $i$'s informed set in
+district $d$ and $\bar I_i^d=\Pset^d\setminus I_i^d$ for the rest. We assume a voter casts informed
+votes sincerely and, under social pressure to ``use all six,'' spreads the leftover
+$\votes-\votes_i^{\text{inf}}$ votes \emph{uniformly at random} over the unknown projects, where
+\[
+  \votes_i^{\text{inf}}=\min\!\Bigl(\votes,\ \Bigl\lfloor \votes\cdot
+  \tfrac{\sum_{p\in I_i^d}u_i(p)}{\sum_{p\in I_i^d}u_i(p)+\epsilon\,|\bar I_i^d|}\Bigr\rfloor\Bigr),
+  \qquad \epsilon>0 .
+\]
+So $\E[x_{i,p}]=(\votes-\votes_i^{\text{inf}})/|\bar I_i^d|$ for each $p\in\bar I_i^d$. The
+parameter $\epsilon$ is the small default weight a voter gives to projects they do not know; the
+results hold for any $\epsilon>0$.
+\end{aside}
+
+\begin{naming}
+We call a vote $x_{i,p}>0$ with $\sigma_i(p)=0$ a \textbf{noise vote}, and the expected total of
+such votes on a project its \textbf{noise} $\eta(p)$, as opposed to its \textbf{signal} $S(p)$ from
+informed voters. The signal/noise language is our framing for this setting.
+\end{naming}
+
+\begin{proposition}[Noise injection]
+\label{prop:noise}
+Suppose some voter who selected district $d$ is uninformed about a project there. Then for each
+$p\in\Pset^d$:
+\begin{enumerate}[label=\textup{(\roman*)},nosep]
+  \item \textbf{(Decomposition.)} $\E[V(p)]=S(p)+\eta(p)$, with
+        $S(p)=\sum_{i:\,d_i=d,\,\sigma_i(p)=1}x_{i,p}^{\text{inf}}$ and $\eta(p)$ the expected
+        noise.
+  \item \textbf{(Quality-blindness.)}
+        $\E[\eta(p)]=\sum_{i:\,d_i=d,\,\sigma_i(p)=0}(\votes-\votes_i^{\text{inf}})/|\bar I_i^d|$,
+        in which no voter's $u_j(p)$ appears: the noise on $p$ does not depend on how good $p$ is.
+  \item \textbf{(Noise can swamp signal.)} There exist low-signal projects for which
+        $\E[\eta(p)]>S(p)$ --- more noise than signal.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+\textbf{(i)} Split the district-$d$ electorate into those informed and those uninformed about $p$;
+$V(p)$ is the sum of the two groups' votes, and linearity of expectation gives the decomposition.
+\textbf{(ii)} Each uninformed voter contributes
+$\E[x_{i,p}]=(\votes-\votes_i^{\text{inf}})/|\bar I_i^d|$, which depends on the mechanism parameter
+$\votes$, on $i$'s preferences over \emph{informed} projects (through $\votes_i^{\text{inf}}$), and
+on the size of $i$'s unknown set --- but never on $u_j(p)$. Summing preserves this.
+\textbf{(iii)} Pick a project with a small informed base (so $S(p)$ is small) about which many
+district voters are uninformed (so $\E[\eta(p)]$ collects noise from the whole uninformed pool);
+then $\E[\eta(p)]>S(p)$.
+\end{proof}
+
+\begin{watchout}
+Two claims one is tempted to overstate. First, the quality-blindness in (ii) is true \emph{by
+construction} of the uniform-noise model --- present it as a consequence of the modelling
+assumption, not as a discovered law of nature. Second, do \textbf{not} claim that the
+noise-to-signal ratio is \emph{monotone} in $|\bar I_i^d|/|\Pset^d|$. Lowering how much voters know
+raises the leftover noise per voter but spreads it over more unknown projects, so the per-project
+effect is ambiguous. The robust, provable claim is the \emph{existence} of noise-swamped projects
+(part (iii)); the example below carries the point, and that is all the paper needs.
+\end{watchout}
+
+\begin{example}[Durango-scale noise]
+\label{ex:noise}
+District $A$: $8$ projects, $100$ voters --- $40$ ``FECA'' voters who know only $p_1$, $30$ locals
+who know $3$ projects each (including $p_1$), $30$ mobilised voters who each know $1$ project (not
+$p_1$).
+\emph{Popular $p_1$:} signal $40(4)+30(2)=220$; noise $\approx30(1/7)\approx4.3$ --- about
+\textbf{2\%} noise. The obvious winner is read cleanly.
+\emph{Small, genuinely valued $p_7$:} signal $5(2)=10$; noise from FECA $40(2/7)\approx11.4$ plus
+mobilised $30(1/7)\approx4.3$, total $\approx15.7$ --- about \textbf{61\%} noise. Whether $p_7$ clears
+the funding margin is decided more by coin-flips than by anyone's preferences.
+\end{example}
+
+\begin{connection}
+The policy reading is sharp: the DEM is fine at picking the obvious winners and close to a lottery
+on the small, locally-valued projects --- exactly the projects participatory budgeting is supposed to
+surface. A rule that let voters simply \emph{not} vote on what they do not know would erase this
+noise at the root. That rule is coming in Section~\ref{sec:mes}.
+\end{connection}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{Proposition 3: the coordination game}
+% ─────────────────────────────────────────────────────────────────────
+
+Now we let voters be strategic. The district choice is a move in a game, and that game has more
+than one equilibrium.
+
+\begin{aside}\small
+\textbf{Decomposing the DEM into two stages.} Read the DEM as: first a \emph{strategic} stage
+(which district?), then a \emph{sincere} stage (allocate within it). The induced
+district-selection game is $\Gamma=\langle\agents,(\D)_i,(\pi_i)_i\rangle$, with payoff
+$\pi_i=\E[\,U_i(g^{\DEM})\mid\text{districts},\text{ sincere within-district voting}\,]$. This
+split lets us study the coordination incentive in isolation.
+\end{aside}
+
+\begin{lemma}[Strategic complementarity in district choice]
+\label{lem:complement}
+For a voter who values $p^*\in\Pset^d$, the marginal value of joining district $d$ is
+\emph{increasing} in the number of others who join when $p^*$ sits near the funding cutoff
+(bandwagon), and \emph{decreasing} once $p^*$ is safely funded (diminishing returns).
+\end{lemma}
+
+\begin{proof}
+Under greedy funding $p^*$ is funded iff $V(p^*)$ ranks high enough city-wide. Near the cutoff,
+extra district-$d$ votes compound with the voter's own and raise the chance $p^*$ clears, so
+joining is more valuable the more others join. Far above the cutoff, extra votes are wasted on a
+project that is already safe, and the voter would do better where their vote is pivotal.
+\end{proof}
+
+\begin{proposition}[Multiple equilibria]
+\label{prop:coord}
+With at least two districts and a block of \emph{mobile} voters --- those with positive utility in
+two districts --- large enough to be pivotal, the district-selection game has multiple Nash
+equilibria that fund different project sets and yield different welfare.
+\end{proposition}
+
+\begin{proof}
+Take two districts $A,B$ with committed bases for $p_A,p_B$, neither funded by its base alone, but
+either funded if the mobile block joins it.
+\emph{Equilibrium $E_A$:} all mobile voters choose $A$; then $p_A$ clears and $p_B$ does not. A lone
+defector to $B$ cannot by themselves push $p_B$ over the line and forfeits their contribution to
+$p_A$ --- no profitable deviation.
+\emph{Equilibrium $E_B$:} symmetric, funding $p_B$ not $p_A$.
+The two equilibria fund different sets, and if $\sum_i u_i(p_A)\ne\sum_i u_i(p_B)$ their welfare
+differs. Both are Nash, so multiplicity holds.
+\end{proof}
+
+\begin{example}[Coordination failure]
+\label{ex:coord}
+Two districts; a project needs $200$ votes to clear. $A$ has $25$ committed voters
+($25\times5=125$ for $p_A$); $B$ has $20$ ($20\times5=100$ for $p_B$); $20$ mobile voters value
+$p_A$ at $8$ and $p_B$ at $10$. In $E_A$, $p_A$ gets $125+20(5)=225$ and clears; a switch to $B$
+yields $100+5=105<200$. In $E_B$, $p_B$ gets $100+20(5)=200$ and clears. The mobile voters
+\emph{prefer} $p_B$ ($10>8$), yet $E_A$ is still an equilibrium: if everyone expects the crowd to
+go to $A$, following the crowd is individually rational even though it funds the worse project.
+\end{example}
+
+\begin{watchout}
+The ``$200$-vote threshold'' in the example is a convenience, not part of the DEM. The real funding
+rule is greedy-by-budget. With two projects and budget for one, the rule ``the project with more
+votes wins'' reproduces both equilibria ($E_A$: $225>100$; $E_B$: $200>125$), so nothing depends on
+positing an exogenous threshold. Say so in the paper rather than smuggling in a threshold.
+\end{watchout}
+
+\begin{keyidea}
+Multiplicity means the outcome turns on a \emph{focal point}: which district gets talked about,
+which group mobilises first, where attention lands. The DEM aggregates \emph{attention} as much as
+preference. That is the bridge to the next result.
+\end{keyidea}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{Proposition 4: mobilization advantage}
+% ─────────────────────────────────────────────────────────────────────
+
+If coordinating on a district is what wins, then whoever can \emph{make} people coordinate gains
+power. A university, an employer, a church --- any body that can say ``everyone vote in district
+$A$'' is an equilibrium-selection device.
+
+\begin{naming}
+We call such a coordinating body a \textbf{mobilizing institution}, and we call the votes it
+diverts from members' own districts \textbf{vote displacement} (written $\Delta_\mathcal{C}$ below).
+Both terms are ours; the phenomenon is the familiar one of organised blocs, here given a precise
+accounting inside the DEM.
+\end{naming}
+
+\noindent Formally, a mobilizing institution is a coalition $\mathcal{C}\subseteq\agents$ with a
+\emph{focal project} $p_\mathcal{C}\in\Pset^{d_\mathcal{C}}$, the ability to steer all members to
+$d_\mathcal{C}$, and members whose own preferred district $d_i^*$ differs from $d_\mathcal{C}$.
+
+\begin{proposition}[Mobilization and displacement]
+\label{prop:mob}
+For a mobilizing institution $\mathcal{C}$ with $|\mathcal{C}|=c$:
+\begin{enumerate}[label=\textup{(\roman*)},nosep]
+  \item it adds exactly $c\votes$ votes to district $d_\mathcal{C}$;
+  \item each diverted member inflates $d_\mathcal{C}$ by $\votes$ and deflates their own $d_i^*$ by
+        $\votes$;
+  \item the net \textbf{vote displacement} is
+        $\Delta_\mathcal{C}=\votes\cdot|\{i\in\mathcal{C}:d_i^*\ne d_\mathcal{C}\}|$;
+  \item the \textbf{private utility loss to diverted members} is
+        \[
+          \mathcal{L}(\mathcal{C})=\sum_{i\in\mathcal{C}^*}\bigl[\,U_i(g^*_{d_i^*})-U_i(g^*_{d_\mathcal{C}})\,\bigr]\ \ge\ 0,
+        \]
+        where $\mathcal{C}^*=\{i\in\mathcal{C}:d_i^*\ne d_\mathcal{C}\}$ and $g^*_d$ is the funded
+        set member $i$ would obtain by voting sincerely in district $d$; each term is taken
+        conditional on the member's displaced votes being pivotal, and is $0$ otherwise.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Parts (i)--(iii) are accounting: every voter places exactly $\votes$ votes in one district, so the
+DEM is zero-sum across districts and each vote added to $d_\mathcal{C}$ is one withheld from
+$d_i^*$. For (iv), absent mobilization member $i$ obtains $U_i(g^*_{d_i^*})$; mobilized, $i$ obtains
+$U_i(g^*_{d_\mathcal{C}})$, which already \emph{includes} whatever utility $i$ gets from the focal
+project $p_\mathcal{C}$. When the displaced votes are pivotal the move weakly worsens $i$'s own
+outcome, so each term is $\ge0$; when they are not pivotal we set the term to $0$. Summing over
+$\mathcal{C}^*$ gives the bound.
+\end{proof}
+
+\begin{watchout}
+Two corrections live here. First, in (iv) compare \emph{full} district utilities:
+$U_i(g^*_{d_\mathcal{C}})$ must include the focal project $p_\mathcal{C}$. An earlier version
+subtracted only the non-focal projects, dropping $u_i(p_\mathcal{C})$ from the right-hand side and
+making the bound sign-ambiguous. Second, name $\mathcal{L}(\mathcal{C})$ honestly: it is a
+\textbf{private} loss to the diverted members, \emph{not} a change in system-wide welfare. It says
+nothing about non-members, whose own districts now win or lose because of the displacement. Calling
+it ``the welfare loss from mobilization'' overclaims.
+\end{watchout}
+
+\begin{example}[A university bloc]
+A faculty mobilises $c=400$ members to the university's district. Vote displacement is
+$\Delta_\mathcal{C}=400\times6=2{,}400$: that many votes are pulled out of members' home districts,
+where they can no longer support the projects those members actually value most. The focal project's
+total swells by the same amount. None of this is fraud; it is rational play that the DEM rewards.
+\end{example}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{Proposition 5: the equity tradeoff (the pivot)}
+% ─────────────────────────────────────────────────────────────────────
+
+So far the DEM looks indefensible. This proposition is what makes the paper interesting: removing
+the constraint (the UAM) is \emph{not} a free win, because the constraint, for all its faults,
+provides a crude geographic protection that the UAM destroys.
+
+\begin{naming}
+We measure that protection with a criterion we call \textbf{$\beta$-geographic equity}. The phrase
+is our label for the inequality in Definition~\ref{def:geo}; the idea that no district with genuine
+demand should be shut out entirely is, of course, not ours.
+\end{naming}
+
+\begin{definition}[$\beta$-geographic equity]
+\label{def:geo}
+A funded set $S$ satisfies \textbf{$\beta$-geographic equity} if every district with at least one
+positively-valued project receives at least a $\beta$-fraction of the per-district equal share:
+\[
+  \sum_{p\in S\cap\Pset^d}\cost(p)\ \ge\ \beta\cdot\frac{\budget}{m}
+  \qquad\text{for every } d \text{ with some } p\in\Pset^d,\ \textstyle\sum_i u_i(p)>0 .
+\]
+Here $\beta=1$ is equal funding per district and $\beta=0$ is no guarantee at all.
+\end{definition}
+
+\begin{proposition}[Equity tradeoff]
+\label{prop:equity}
+Suppose salience is heterogeneous, $\salience_{d_H}>\salience_{d_L}$ for a high- and a low-salience
+district. Then:
+\begin{enumerate}[label=\textup{(\roman*)},nosep]
+  \item \textbf{(UAM vote ceiling.)} Under sincere UAM voting, every project $p$ obeys
+        $V^{\UAM}(p)\le\salience_{d(p)}\,n\votes$; so a low-salience project has a strictly lower
+        vote \emph{ceiling}, regardless of its true value.
+  \item \textbf{(DEM shelter.)} Under the DEM, the exclusivity constraint segments competition:
+        committed residents of $d_L$ supply a pool of votes to $d_L$'s projects that cannot leak
+        away to $d_H$.
+  \item \textbf{(The gap.)} There are parameter values where the DEM achieves $\beta>0$ while the
+        UAM yields $\beta=0$ --- the low-salience district is shut out completely.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+\textbf{(i)} Under sincere UAM voting a voter puts zero votes on projects they do not know, so
+$V^{\UAM}(p)=\sum_{i:\sigma_i(p)=1}x_{i,p}\le|\{i:\sigma_i(p)=1\}|\,\votes\le\salience_{d(p)}\,n\votes$,
+the last step being the definition of salience.
+\textbf{(ii)} If $n_{d_L}$ residents select $d_L$ they direct $\votes\,n_{d_L}$ votes onto $d_L$'s
+projects, sealed off from competition with the high-salience centre.
+\textbf{(iii)} Take $\salience_{d_H}=0.8$, $\salience_{d_L}=0.1$, $n=1000$, $\votes=6$. Under the
+UAM, $d_H$'s projects can reach $4{,}800$ votes and $d_L$'s at most $600$; if the top funded
+projects are all high-salience, $d_L$ gets nothing, $\beta=0$. Under the DEM, $100$ committed $d_L$
+residents supply $600$ concentrated votes over (say) three local projects --- enough to fund the top
+one, so $\beta>0$.
+\end{proof}
+
+\begin{watchout}
+\textbf{This is where Proposition~1 and Proposition~5 must be reconciled, or a referee will catch a
+contradiction.} Proposition~1 says (under its hypotheses) $W^{\DEM}\le W^{\UAM}$; Proposition~5
+builds a case where the UAM funds nothing in a district whose projects are genuinely valued ---
+a welfare \emph{gain} for the DEM. Both cannot hold unconditionally. The resolution is the
+full-information hypothesis in Proposition~\ref{prop:trunc}(iii): the reversal here is driven by
+\emph{salience} (an information object), not by \emph{utility}. Under the UAM a widely-\emph{known}
+low-value project can outpoll a narrowly-known high-value one --- a channel that exists only when
+$\sigma\not\equiv1$, and which full information switches off. So the two propositions are
+complementary: Proposition~1 is the \emph{constraint} effect (full information), Proposition~5 the
+\emph{information} effect (salience asymmetry). Together they say: deregulation alone is not the
+answer, which is the entire motivation for the next chapter.
+\end{watchout}
+
+\begin{aside}\small
+\textbf{One open modelling choice to settle on the page.} Definition~\ref{def:geo} benchmarks
+against the \emph{equal-per-district} share $\budget/m$. The guarantee we prove for the Method of
+Equal Shares (Proposition~\ref{prop:mesq}) is instead \emph{population-proportional},
+$\beta_d\budget$ with $\beta_d=n_d/n$. These are different fairness ideals, and they do not coincide
+--- a small marginalised district fares better under equal-per-district than under
+population-proportional. Pick one benchmark for the paper and use it consistently; the cleanest
+choice, absent other weighting, is population-proportional throughout.
+\end{aside}
+
+% ═════════════════════════════════════════════════════════════════════
+\section{A better rule: the Method of Equal Shares}
+\label{sec:mes}
+% ═════════════════════════════════════════════════════════════════════
+
+Propositions 1--4 indict the DEM; Proposition~5 warns that mere deregulation (the UAM) trades one
+failure for another. We need a rule that expresses cross-district preferences \emph{and} protects
+small districts by construction. Such a rule already exists in the social-choice literature.
+
+\begin{aside}\small
+\textbf{This one is not our coinage.} The \textbf{Method of Equal Shares} (MES) and the fairness
+axiom it satisfies, \textbf{Extended Justified Representation} (EJR), are established results of
+\citet{peters2021}; likewise ``cohesive group'' is standard terminology there. We adopt the names
+as-is and cite the source. (Contrast the violet boxes earlier, which flagged labels we invented.)
+\end{aside}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{The idea, then the algorithm}
+% ─────────────────────────────────────────────────────────────────────
+
+\begin{keyidea}
+Treat the budget as if it were \emph{individually owned}. Give every voter a virtual share
+$\budget/n$. A project gets funded when the voters who back it can jointly pay its cost out of
+their remaining shares, charging supporters as \emph{equally} as the budgets allow. The
+consequence is proportional: any group of $k$ voters controls $k\cdot\budget/n$ that no majority
+can spend on its behalf. A marginalised district's residents thus carry their own protected
+purse --- no district lock-in required.
+\end{keyidea}
+
+\begin{definition}[Method of Equal Shares]
+\label{def:mes}
+Voters submit \textbf{approval ballots}: $A_i\subseteq\Pset$ is the set of projects $i$ supports
+(no district constraint). Initialise each voter's virtual budget at $b_i=\budget/n$. Then iterate:
+\begin{enumerate}[label=\textbf{\arabic*.},nosep]
+  \item For each unfunded project $p$, let $N(p)=\{i:p\in A_i,\ b_i>0\}$ be its active supporters.
+  \item For each such $p$, compute the \textbf{per-supporter cost cap}
+        \[
+          \mesrho(p)=\min\Bigl\{\rho\ge0:\ \textstyle\sum_{i\in N(p)}\min(b_i,\rho)\ \ge\ \cost(p)\Bigr\}.
+        \]
+  \item If no project has a finite $\mesrho$, \textbf{stop}.
+  \item Otherwise fund $p^*=\argmin_p \mesrho(p)$; each supporter $i$ pays $\min(b_i,\mesrho(p^*))$,
+        and $b_i$ drops by that amount.
+  \item Remove $p^*$ and repeat.
+\end{enumerate}
+\textbf{Completion.} If budget remains when MES halts, a completion rule (typically greedy by
+number of approvals) spends the rest.
+\end{definition}
+
+\begin{intuition}
+$\mesrho(p)$ is the smallest \emph{equal} charge per supporter that covers $\cost(p)$, with
+supporters too poor to pay $\rho$ capped at whatever they have left and the rest made up by the
+richer backers. A small $\mesrho(p)$ means ``cheap per supporter'' --- either the project is cheap
+or it has many well-funded backers. Funding the smallest-$\mesrho$ project first rewards broad,
+affordable support and quietly screens out expensive projects held by a narrow group.
+\end{intuition}
+
+\begin{remark}[Why $\mesrho(p)$ is well-defined]
+Let $h(\rho)=\sum_{i\in N(p)}\min(b_i,\rho)$. It is continuous and non-decreasing in $\rho$, with
+$h(0)=0$ and $h(\rho)\uparrow\sum_{i\in N(p)}b_i$. So a finite $\mesrho(p)$ exists \emph{iff}
+$\sum_{i\in N(p)}b_i\ge\cost(p)$; otherwise the supporters simply cannot afford $p$ and it is
+skipped --- exactly the stopping condition in step~3.
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{A walkthrough}
+% ─────────────────────────────────────────────────────────────────────
+
+\begin{example}[The Method of Equal Shares, step by step]
+\label{ex:mes}
+$\budget=100$, $n=4$, so $b_i=25$ each. Approvals: $p_1$ (cost $40$) by voters $1,2,3$; $p_2$
+(cost $30$) by $3,4$; $p_3$ (cost $50$) by $1,2$; $p_4$ (cost $20$) by $4$.
+
+\smallskip\noindent\textbf{Round 1.}
+$\mesrho(p_1)=40/3\approx13.3$, $\mesrho(p_2)=15$, $\mesrho(p_3)=25$, $\mesrho(p_4)=20$.
+Smallest is $p_1$: \textbf{fund $p_1$}; voters $1,2,3$ each pay $13.3$, leaving
+$b_1=b_2=b_3=11.67$, $b_4=25$.
+
+\smallskip\noindent\textbf{Round 2.}
+$p_2$: supporters $3,4$ hold $11.67$ and $25$; solving $11.67+\rho=30$ gives $\mesrho(p_2)=18.33$.
+$p_4$: supporter $4$ holds $25$, so $\mesrho(p_4)=20$.
+$p_3$: supporters $1,2$ hold $11.67$ each, total $23.34<50$ --- not affordable.
+The smallest is $p_2$ (since $18.33<20$): \textbf{fund $p_2$}; voter $3$ pays $11.67$ (to $b_3=0$),
+voter $4$ pays $18.33$ (to $b_4=6.67$).
+
+\smallskip\noindent\textbf{Round 3.}
+$p_4$: only voter $4$ remains, with $6.67<20$ --- not affordable. $p_3$: still $23.34<50$. MES
+\textbf{stops} with $\{p_1,p_2\}$, cost $70$, leaving $30$.
+
+\smallskip\noindent\textbf{Completion.} The leftover $30$ funds $p_4$ (cost $20\le30$); $p_3$
+(cost $50$) cannot be afforded. \textbf{Final outcome: $\{p_1,p_2,p_4\}$}, cost $90$.
+
+\smallskip\noindent\emph{What to notice.} Both marginal-district projects are funded with no
+geographic rule at all --- $p_2$ \emph{inside} MES (its two backers share the cost at a lower cap
+than $p_4$'s lone backer) and $p_4$ via completion. The expensive, narrowly-held $p_3$ is screened
+out once its backers have spent on $p_1$.
+\end{example}
+
+\begin{watchout}
+A subtle step that is easy to botch: in Round 2 the project to fund is $p_2$, not $p_4$, because
+$\mesrho(p_2)=18.33<20=\mesrho(p_4)$. (An earlier version of this example funded $p_4$ here; the
+final set happens to be the same, but the \emph{path} --- and therefore the explanation --- is
+different: $p_2$ is funded \emph{inside} MES, $p_4$ only in completion.) Always recompute every
+$\mesrho$ from the \emph{current} budgets each round; intuitions about ``the cheapest project''
+formed in Round~1 do not survive the budget updates.
+\end{watchout}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{Why it protects minorities: EJR and geographic equity}
+% ─────────────────────────────────────────────────────────────────────
+
+The protection is not a happy accident of the example; it is a theorem.
+
+\begin{definition}[Cohesive group; Extended Justified Representation]
+\label{def:ejr}
+A set of voters $S$ is \textbf{$T$-cohesive} for a project set $T$ if every member approves every
+project in $T$ ($T\subseteq A_i$ for all $i\in S$). An outcome $W$ satisfies \textbf{EJR} if for
+every $T$-cohesive group $S$ whose shares can afford $T$ --- that is,
+$|S|\,\budget/n\ge\sum_{p\in T}\cost(p)$ --- at least one member $i\in S$ is represented to that
+level: $\sum_{p\in W\cap A_i}\cost(p)\ge\sum_{p\in T}\cost(p)$.
+\end{definition}
+
+\begin{intuition}
+EJR is a floor on how thoroughly any large-enough, agreed-enough group can be ignored. If a
+group's own shares could have bought a bundle $T$, the rule must leave at least one member as well
+represented as $T$. It is the precise sense in which a minority ``cannot be outvoted into nothing.''
+\end{intuition}
+
+\begin{theorem}[The Method of Equal Shares satisfies EJR; \citealp{peters2021}]
+\label{thm:ejr}
+The outcome of the Method of Equal Shares satisfies EJR.
+\end{theorem}
+
+\begin{proof}[Proof idea (the full proof is \citealp{peters2021}; we cite it rather than reprove)]
+Suppose a $T$-cohesive group $S$ that can afford $T$ ends up under-represented. Track $S$'s
+collective budget: it begins at $|S|\,\budget/n$ and only falls when MES funds projects that
+$S$-members approve. If some project of $T$ is ever funded, $S$-members paid into it and it counts
+toward their representation. If no project of $T$ is ever funded, then at every round a cheaper
+(smaller-$\mesrho$) project that $S$-members also approve was chosen instead --- spending their
+shares on other approved projects, which also count. Either way the collective share cannot drain
+to zero without some member reaching representation $\ge\sum_{p\in T}\cost(p)$, contradicting
+under-representation. The complete argument is an induction over the sequence of selections.
+\end{proof}
+
+\begin{example}[EJR in action: a minority that cannot be outvoted away]
+\label{ex:ejr}
+$n=10$ voters, $\budget=10$, so $b_i=1$. A majority of $6$ voters approve three cheap, popular
+projects $m_1,m_2,m_3$ (each cost $3$); a minority of $4$ voters approve only one project $q$
+(cost $4$). The minority's shares total $4\cdot1=4=\cost(q)$, so they are a $\{q\}$-cohesive group
+that can just afford $q$ --- EJR \emph{must} represent them.
+
+\emph{What the Method of Equal Shares does.} Round 1:
+$\mesrho(m_1)=\mesrho(m_2)=\mesrho(m_3)=3/6=0.5$ and $\mesrho(q)=4/4=1$; fund $m_1$, the six majority
+voters drop to $0.5$. Round 2: each remaining $m_j$ still has $\mesrho=0.5$ (six voters at $0.5$ cover
+$3$ exactly); fund $m_2$, the majority drop to $0$. Round 3: $m_3$'s backers are now broke, so it is
+unaffordable; $q$'s four backers still hold $1$ each, $\mesrho(q)=1$; fund $q$. Outcome
+$\{m_1,m_2,q\}$, cost $10$. The minority got $q$.
+
+\emph{Contrast with a vote-count rule.} Greedy by number of approvals would fund $m_1,m_2,m_3$ (each
+with $6$ approvals, total cost $9$), leaving only $1$ --- not enough for $q$ ($4$ approvals, cost $4$).
+The minority is shut out. EJR is exactly the property that forbids this: because the minority could
+pay for $q$ out of their own shares, the Method of Equal Shares guarantees they are not outvoted into
+nothing. This is the engine behind the geographic guarantee we prove next.
+\end{example}
+
+\noindent Now translate proportionality into geography. A district's residents who only care about
+local projects form exactly the kind of cohesive group EJR protects.
+
+\begin{proposition}[The Method of Equal Shares implies geographic equity]
+\label{prop:mesq}
+Let district $d$ have $n_d$ \textbf{committed residents} (voters with $A_i\subseteq\Pset^d$).
+Suppose there is a \textbf{commonly-approved} local bundle
+$T_d\subseteq\bigcap_{i\,\text{resident}}A_i$ --- one that \emph{every} resident approves --- with
+$\sum_{p\in T_d}\cost(p)\le n_d\,\budget/n$. Then some resident is represented to the level of
+$T_d$, and hence
+\[
+  \sum_{p\in W\cap\Pset^d}\cost(p)\ \ge\ \sum_{p\in T_d}\cost(p).
+\]
+Writing $C_d^\star$ for the most expensive such commonly-approved affordable bundle, district $d$ is
+guaranteed funding $C_d^\star$; and if the residents commonly approve local projects worth at least
+$\beta_d\budget$ (with $\beta_d=n_d/n$), the guarantee is the full population share $\beta_d\budget$.
+\end{proposition}
+
+\begin{proof}
+By hypothesis $T_d\subseteq A_i$ for all $n_d$ residents, so they form a $T_d$-cohesive group of
+size $n_d$ with $n_d\,\budget/n\ge\sum_{p\in T_d}\cost(p)$. EJR (Theorem~\ref{thm:ejr}) yields a
+resident $i$ with $\sum_{p\in W\cap A_i}\cost(p)\ge\sum_{p\in T_d}\cost(p)$. Since
+$A_i\subseteq\Pset^d$, we have $W\cap A_i\subseteq W\cap\Pset^d$, so
+$\sum_{p\in W\cap\Pset^d}\cost(p)\ge\sum_{p\in T_d}\cost(p)$. Taking the maximal commonly-approved
+affordable bundle gives $C_d^\star$.
+\end{proof}
+
+\begin{watchout}
+\textbf{Two hypotheses are doing the work, not one.} ``Committed'' ($A_i\subseteq\Pset^d$) only
+guarantees that whatever representation EJR delivers \emph{lands inside} $d$. EJR additionally needs
+a \textbf{common core} $T_d$ that \emph{all} $n_d$ residents approve --- being committed does not make
+residents agree on \emph{which} local projects to fund. If their local tastes are heterogeneous, the
+full $\beta_d\budget$ floor can shrink toward the best cohesive sub-coalition's $|S|\,\budget/n$;
+it stays strictly positive, hence still better than the UAM's $\beta=0$, but it is not automatically
+the population share. State the floor against the common-core bundle, or argue (empirically, in the
+simulation) that Durango's districts have a sizeable project most residents back.
+\end{watchout}
+
+\begin{connection}
+The bottom line for Durango: a district that is, say, 5\% of the electorate and rallies behind a
+local project is guaranteed roughly 5\% of the budget for it --- whatever the city centre's
+visibility, whatever a university campaign does, whatever voters know about other districts. The
+protection is structural, not behavioural, which is exactly what Proposition~5 said the DEM's
+protection was \emph{not}.
+\end{connection}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{The Method of Equal Shares undoes the four distortions}
+% ─────────────────────────────────────────────────────────────────────
+
+Each of the next four propositions pairs with one earlier failure. Three are nearly definitional;
+state them briefly and move on.
+
+\begin{proposition}[No truncation]
+\label{prop:mes-trunc}
+Under the Method of Equal Shares a ballot $A_i\subseteq\Pset$ may contain projects from any
+districts; the reachable \emph{scope} of supported projects strictly contains the DEM's (it removes
+both the single-district restriction and the cap on how many projects one may back).
+\end{proposition}
+\begin{proof}
+Immediate from Definition~\ref{def:mes}: there is no district-selection step, so any subset of
+$\Pset$ --- in particular any cross-district one --- is a legal ballot. (We phrase the comparison as
+scope, per the convention in Section~\ref{sec:model}, not as a nesting of message spaces.)
+\end{proof}
+
+\begin{proposition}[No forced noise]
+\label{prop:mes-noise}
+A voter who does not know project $p$ ($\sigma_i(p)=0$) simply leaves it out of $A_i$. The rule
+never demands a minimum ballot size, so no noise votes arise; an under-informed voter's unspent
+share flows to completion as unused entitlement, not as misdirected support.
+\end{proposition}
+\begin{proof}
+The DEM forced all $\votes$ votes inside one district, unknown projects included --- the source of
+noise. The Method of Equal Shares imposes no such floor, so $A_i$ can be exactly the known, valued
+set and every recorded approval is informative.
+\end{proof}
+
+\begin{proposition}[No district-selection game]
+\label{prop:mes-coord}
+There is no district-selection stage, so the coordination game of Proposition~\ref{prop:coord} does
+not arise; the residual strategic interaction is project-by-project rather than a coarse,
+focal-point-driven district choice.
+\end{proposition}
+\begin{proof}
+The multiplicity in Proposition~\ref{prop:coord} came from the bandwagon complementarity of the
+\emph{district} choice. Here a voter's payoff from approving $p$ depends on $p$'s other supporters
+(through $\mesrho(p)$) and on their own remaining budget --- a finer interaction with no ``which
+district?'' focal point to herd on.
+\end{proof}
+
+\begin{watchout}
+Proposition~\ref{prop:mes-coord} is a \emph{plausibility} claim --- ``no district stage, so no
+bandwagon multiplicity'' --- not an equilibrium-uniqueness theorem. The Method of Equal Shares is
+still manipulable (Proposition~\ref{prop:sp} below). Claim only that the DEM's specific coordination
+pathology is gone, not that all strategic behaviour vanishes.
+\end{watchout}
+
+\begin{proposition}[Bounded mobilization]
+\label{prop:mes-mob}
+A coalition $\mathcal{C}$ with $|\mathcal{C}|=c$ can fund a focal project $p_\mathcal{C}$
+\emph{by itself} only if $\cost(p_\mathcal{C})\le c\,\budget/n$. It cannot touch non-members'
+shares, so the DEM's vote displacement is gone ($\Delta=0$).
+\end{proposition}
+\begin{proof}
+Funding $p_\mathcal{C}$ requires its backers to cover the cost from their own budgets; the
+coalition's maximum contribution is $\sum_{i\in\mathcal{C}}b_i\le c\,\budget/n$. Non-members keep
+their full shares and their EJR-protected representation, and there are no districts to drain.
+\end{proof}
+
+\begin{example}[The university bloc, revisited]
+A faculty mobilises $200$ of $n=2{,}000$ voters; $\budget=1{,}000{,}000$ pesos; the focal project
+costs $120{,}000$. Under the Method of Equal Shares the bloc commands only $200\times500=100{,}000$
+--- short of $120{,}000$, so it needs at least $40$ genuine outside supporters. Under the DEM the same
+$200$ concentrate $1{,}200$ votes, plausibly capturing the district while stripping $1{,}200$ votes
+from home districts. The contrast is the whole point: the new rule makes the bloc \emph{earn} broad
+support rather than manufacture it by relocation.
+\end{example}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{An honest limitation: it is not strategy-proof}
+% ─────────────────────────────────────────────────────────────────────
+
+A credible paper states what its proposal does \emph{not} fix. The Method of Equal Shares is not
+strategy-proof, and we show this with a concrete, robust example.
+
+\begin{proposition}[The Method of Equal Shares is not DSIC]
+\label{prop:sp}
+There are preference profiles where a voter strictly gains by submitting a ballot other than their
+sincere one.
+\end{proposition}
+
+\begin{proof}
+Take $n=4$, $b_i=1$ each, two projects $p_1,p_2$ each costing $2$. Sincere ballots:
+$V_1=\{p_1,p_2\}$, $V_2=V_3=\{p_1\}$, $V_4=\{p_2\}$. Then $\mesrho(p_1)=2/3<1=\mesrho(p_2)$, so MES
+funds $p_1$, charging voters $1,2,3$ each $2/3$. Afterward $p_2$'s backers $1,4$ hold
+$1/3+1=4/3<2$, so $p_2$ fails: the outcome is $\{p_1\}$.
+
+Now voter $1$ deviates to $A_1'=\{p_2\}$ --- hiding her support for $p_1$. Now $\mesrho(p_1)=1$
+(backers $2,3$) and $\mesrho(p_2)=1$ (backers $1,4$). Whichever is funded first at cap $1$, the
+other becomes affordable immediately after, so the outcome is $\{p_1,p_2\}$ --- \emph{under either
+tie-break}. Voter $1$ moves from $u_1(p_1)$ to $u_1(p_1)+u_1(p_2)$: a strict gain, achieved by
+free-riding on voters $2,3$'s support for $p_1$ and saving her own budget for $p_2$.
+\end{proof}
+
+\begin{watchout}
+Two things to get right when you write this up. First, the example is \textbf{tie-break robust}:
+both resolutions of the $\mesrho=1$ tie give $\{p_1,p_2\}$, so do not hedge with ``say $p_2$ wins''
+and do not bother perturbing the costs. Second, attribute the impossibility correctly. The reason no
+fix is available is \emph{not} Gibbard--Satterthwaite (whose unrestricted-domain hypothesis fails
+here, as we stressed in Section~\ref{sec:what}); it is the domain-appropriate result of
+\citet{peters2021} that \emph{no rule satisfying EJR can be strategy-proof}. Present
+Proposition~\ref{prop:sp} as a concrete instance of that result, and frame manipulability as the
+unavoidable price of the very proportionality that buys us geographic equity.
+\end{watchout}
+
+\begin{aside}\small
+\textbf{Why this is not catastrophic in practice.} Three things keep the manipulability of
+Proposition~\ref{prop:sp} from undermining the proposal. \textbf{(1)} The deviation requires detailed
+knowledge of how everyone else will vote --- which project will be ``cheap'' enough to free-ride on ---
+and in a large electorate that information simply is not available. \textbf{(2)} It is risky: if
+enough voters hide their support for the popular project, it may fail to be funded at all, and the
+manipulator loses it outright. \textbf{(3)} It is provably unavoidable for any proportional rule
+(\citealp{peters2021}), so the Method of Equal Shares is already as good as one can do on this axis.
+None of this makes the rule strategy-proof; together they make the residual manipulability low-stakes.
+\end{aside}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{Two more honest limitations: the completion gap and ballot complexity}
+% ─────────────────────────────────────────────────────────────────────
+
+Strategy-proofness is not the only thing the Method of Equal Shares gives up. Two practical
+limitations deserve their own discussion, because a referee --- or a skeptical municipal official ---
+will raise them, and the paper is stronger for meeting them head-on.
+
+\medskip\noindent\textbf{The completion gap.} The rule routinely fails to spend the whole budget in
+its proportional phase. Once every remaining project is unaffordable to its backers, MES stops, and a
+\emph{completion} step (greedy by approvals) places the rest --- carrying \emph{none} of the EJR
+guarantee. The size of that gap is not a footnote: it depends on how project costs compare to the
+per-voter share $\budget/n$. Many small projects let the proportional phase reach far; a few expensive
+projects leave most of the budget to completion. The next example makes the worry concrete.
+
+\begin{example}[When completion does most of the work]
+\label{ex:completion}
+$n=10$, $\budget=100$, so $b_i=10$. Projects: $p_1$ (cost $30$, backed by voters $1$--$6$); $p_2$
+(cost $60$, backed by voters $5$--$10$); $p_3$ (cost $50$, backed by voters $1$--$5$).
+\emph{Round 1:} $\mesrho(p_1)=30/6=5$, $\mesrho(p_2)=60/6=10$, $\mesrho(p_3)=50/5=10$; fund $p_1$, its
+six backers drop to $5$.
+\emph{Round 2:} $p_2$'s backers can muster at most $2(5)+4(10)=50<60$; $p_3$'s can muster $5(5)=25<50$.
+\textbf{MES stops}, having spent just $30$ of $100$. Completion then funds $p_2$ (cost $60$, more
+approvals) out of the leftover, ending at $\{p_1,p_2\}$.
+\emph{The point:} two-thirds of the spent budget ($60$ of $90$) was placed by \emph{completion}, which
+has no proportionality guarantee. With projects expensive relative to $\budget/n$, the part of the rule
+that earns our equity theorem barely gets to act.
+\end{example}
+
+\begin{connection}
+The design implication for Durango is concrete: keep project cost tiers small relative to the
+per-voter share $\budget/n$, so the proportional phase --- the part carrying the equity guarantee ---
+does as much of the allocation as possible. \citet{peters2021} discuss several completion methods; the
+paper should name the one it uses and report what fraction of the budget that completion step ends up
+placing.
+\end{connection}
+
+\medskip\noindent\textbf{Ballot complexity.} Under the DEM a voter's task is small: pick a district,
+split six votes. Under the Method of Equal Shares the voter is asked to consider \emph{every} project,
+city-wide, and decide which to approve. With fifty or more projects that is a genuine cognitive load,
+and it interacts with the information problem of Section~\ref{sec:distortions}: a voter who knows few
+projects submits a thin ballot, and the budget share they leave unspent leaks to completion. The
+remedy is interface design, not a change to the rule --- present projects grouped by district with short
+descriptions and costs, let voters approve as many or as few as they wish, and show a running ``budget
+impact'' indicator so a voter can see how much of their share they have committed. That is
+informationally \emph{richer} than the DEM, which gives no sense of opportunity cost at all, while
+staying tractable.
+
+% ═════════════════════════════════════════════════════════════════════
+\section{The three rules side by side}
+\label{sec:comparison}
+% ═════════════════════════════════════════════════════════════════════
+
+We can now assemble the diagnosis and the remedy into one comparison, then watch all three rules
+run on a single realistic profile.
+
+\begin{theorem}[Mechanism comparison]
+\label{thm:comp}
+For a participatory-budgeting environment with heterogeneous salience and voters who have
+cross-district preferences and incomplete information, the three rules compare as follows:
+\begin{center}\small\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{p{6.6cm}ccc}
+\toprule
+\textbf{Property} & \textbf{DEM} & \textbf{UAM} & \textbf{MES}\\
+\midrule
+Full preference expression (no truncation) & $\times$ & $\checkmark$ & $\checkmark$\\
+No forced noise injection & $\times$ & $\checkmark$ & $\checkmark$\\
+No coordination game & $\times$ & $\checkmark$ & $\checkmark$\\
+Resistant to mobilization capture & $\times$ & Partial & $\checkmark$\\
+$\beta$-geographic equity & Partial & $\times$ & $\checkmark$ (via EJR)\\
+Strategy-proof (DSIC) & $\times$ & $\times$ & $\times$\\
+Proportional representation & $\times$ & $\times$ & $\checkmark$\\
+Simple ballot & $\checkmark$ & $\checkmark$ & Partial\\
+\bottomrule
+\end{tabular}
+\end{center}
+Moreover: \textbf{(i)} no rule satisfying EJR is strategy-proof (\citealp{peters2021}), so the
+Method of Equal Shares' manipulability is inherent, not a design flaw; \textbf{(ii)} its geographic
+equity is \emph{constructive} (it follows from EJR, proportionally to population), whereas the DEM's
+is \emph{accidental} (it rests on voters self-selecting into home districts, and is undone by
+mobilization); \textbf{(iii)} under full information and sincere voting, the Method of Equal Shares
+weakly dominates the DEM on \emph{expected utilitarian welfare}.
+\end{theorem}
+
+\begin{proof}[Proof (assembly)]
+Each table cell is a proposition already proved. \emph{DEM column:} Propositions~\ref{prop:trunc}
+(truncation), \ref{prop:noise} (noise), \ref{prop:coord} (coordination), \ref{prop:mob}
+(mobilization), \ref{prop:equity} (only partial, accidental equity); not DSIC because the district
+stage is manipulable. \emph{UAM column:} no truncation/noise/coordination by construction; only
+partial mobilization resistance (a bloc may concentrate votes but cannot stop others voting);
+$\times$ equity by Proposition~\ref{prop:equity}; not DSIC (votes can be strategically concentrated).
+\emph{MES column:} Propositions~\ref{prop:mes-trunc}--\ref{prop:mes-mob} and
+Theorem~\ref{thm:ejr}/Proposition~\ref{prop:mesq}; not DSIC by Proposition~\ref{prop:sp}. Claim (i)
+is the impossibility of \citet{peters2021}; (ii) contrasts a structural budget-accounting guarantee
+with a behavioural one; (iii) holds because the Method of Equal Shares can reproduce any DEM support
+pattern and, under full information, its selection improves expected utilitarian welfare.
+\end{proof}
+
+\begin{watchout}
+Claim (iii) is \emph{not} Pareto-dominance. (An earlier statement said ``weakly Pareto-dominates''
+--- too strong.) A voter whose favourite is a high-salience central project that the DEM's
+concentration funds quickly can be \emph{worse} off under the Method of Equal Shares. State only
+\emph{expected utilitarian} welfare dominance, and note that even that inherits the
+full-information caveat of Proposition~\ref{prop:trunc}. The genuinely unconditional advantages are
+the structural rows of the table --- lead with those, not with a welfare number.
+\end{watchout}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{A full worked comparison at Durango scale}
+% ─────────────────────────────────────────────────────────────────────
+
+\begin{example}[$n=300$, three districts, all three rules]
+\label{ex:300}
+$\budget=300$, $\votes=6$ (for DEM/UAM), $b_i=1$ (for MES). Districts and projects:
+\begin{center}\small
+\begin{tabular}{lccc}
+\toprule
+ & District $A$ (centre) & District $B$ (residential) & District $C$ (marginalised)\\
+\midrule
+Committed residents & 100 & 120 & 80\\
+Salience $\salience_d$ & 0.90 & 0.50 & 0.15\\
+Projects & $p_1$ (120), $p_2$ (80) & $p_3$ (100) & $p_4$ (60), $p_5$ (40)\\
+\bottomrule
+\end{tabular}
+\end{center}
+Voter blocks: $100$ in $A$ approve $\{p_1,p_2\}$; $80$ mobile in $B$ approve $\{p_1,p_3\}$; $40$
+local in $B$ approve $\{p_3\}$; $60$ in $C$ approve $\{p_4,p_5\}$; $20$ ``connected'' in $C$ approve
+$\{p_1,p_4\}$.
+
+\medskip\noindent\textbf{Under the DEM} (with bandwagoning: $50$ of the mobile $B$-voters and the
+$20$ connected $C$-voters defect to $A$ for $p_1$):
+$V(p_1)=100(4)+50(6)+20(6)=820$, $V(p_3)=30(6)+40(6)=420$, $V(p_4)=60(4)=240$, $V(p_2)=200$,
+$V(p_5)=120$. Greedy funds $\{p_1,p_3,p_4\}$ (cost $280$). District $C$ gets $p_4$ --- but $70$ voters
+were pulled out of their home districts to get there.
+
+\medskip\noindent\textbf{Under the UAM} (sincere across known projects): roughly $p_1\approx600$,
+$p_3\approx360$, $p_2\approx200$, $p_4\approx160$, $p_5\approx60$. Greedy funds $\{p_1,p_2,p_3\}$
+(cost $300$). \textbf{District $C$ gets nothing}: $\beta=0$.
+
+\medskip\noindent\textbf{Under the Method of Equal Shares} ($b_i=1$):
+\emph{Round 1:} $\mesrho(p_1)=120/200=0.60$ is smallest; fund $p_1$, dropping its $200$ backers to
+$0.40$.
+\emph{Round 2:} $p_2$ ($40<80$) and $p_3$ ($80(0.40)+40(1)=72<100$) are unaffordable; $p_4$ needs
+$\mesrho\approx0.87$; $p_5$ has $\mesrho=40/60\approx0.667$, the smallest --- fund $p_5$, dropping the
+$60$ $C$-residents to $0.333$.
+\emph{Round 3:} nothing is affordable ($p_4$: $60(0.333)+20(0.40)=28<60$). MES stops with
+$\{p_1,p_5\}$ (cost $160$); completion funds $p_3$ (cost $100$), and the remaining $40$ cannot afford
+$p_4$. \textbf{Outcome $\{p_1,p_3,p_5\}$}: district $C$ is funded out of \emph{its own residents'
+shares}, with no district lock-in, no noise, and no displacement.
+
+\medskip
+\begin{center}\small\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lccc}
+\toprule
+ & DEM & UAM & MES\\
+\midrule
+District $C$ funded & $p_4$ (partial) & \textbf{nothing} & $p_5$\\
+Noise votes & yes & no & no\\
+Coordination needed & yes & no & no\\
+Vote displacement & yes ($70$) & no & no\\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{example}
+
+% ═════════════════════════════════════════════════════════════════════
+\section{From theory to simulation}
+\label{sec:sim}
+% ═════════════════════════════════════════════════════════════════════
+
+The empirical part of this paper is a \textbf{simulation study}, not an analysis of municipal
+records. We do not yet have ballot-level data from the \emph{Municipio de Durango}; obtaining it is
+deliberately left to follow-up work. The simulation is what we can build now, and it doubles as the
+artefact we put in front of the municipality --- a concrete demonstration that might persuade them to
+share data for a later study.
+
+\begin{aside}\small
+\textbf{Scope, stated plainly.} This paper $=$ theory (Sections~\ref{sec:what}--\ref{sec:comparison})
+$+$ simulation (this section). Real-data estimation, and any need-based reweighting of shares, are
+explicitly future work. Keeping that boundary clear protects the paper from promising more than it
+delivers.
+\end{aside}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{What the simulation establishes}
+% ─────────────────────────────────────────────────────────────────────
+
+On a preference profile --- synthetic now, real later if data arrives --- run all three rules on
+identical inputs and compare the funded sets on two precise axes: welfare and geographic equity.
+
+\begin{definition}[Welfare measures]
+\label{def:welfare}
+When the profile is synthetic the utilities $u_i$ are known, so report \textbf{true utilitarian
+welfare} $W^M=\sum_i U_i(g^M)=\sum_i\sum_{p\in g^M}u_i(p)$ for each rule $M$. When only ballots are
+observed (no $u_i$), fall back to the \textbf{vote-total proxy}
+$\widehat W^{M}=\sum_{p\in g^M}V(p)$, reported alongside the \textbf{signal-only proxy}
+$\widehat W^{M}_{\text{sig}}=\sum_{p\in g^M}S(p)$ (informed votes only).
+\end{definition}
+
+\begin{watchout}
+Do not conflate $W$ and $\widehat W$. The vote-total proxy \emph{builds in} the very noise and
+salience distortions the paper is criticising --- a project funded mostly by noise scores as ``high
+welfare'' under $\widehat W$. So $\widehat W$ is appropriate only as a stand-in when $u_i$ is
+unobserved, and even then report the signal-only version next to it. In the synthetic simulations,
+where you \emph{know} $u_i$, use the true $W$. Never label the vote-total proxy simply ``welfare.''
+\end{watchout}
+
+\begin{definition}[Geographic-equity measures]
+\label{def:equity-metrics}
+For each rule report: the district funding shares
+$f_d=\sum_{p\in g^M\cap\Pset^d}\cost(p)\big/\sum_{p\in g^M}\cost(p)$; the population shares
+$\beta_d=n_d/n$; the smallest realised $\beta$ in the sense of Definition~\ref{def:geo},
+$\min_d \tfrac{m}{\budget}\sum_{p\in g^M\cap\Pset^d}\cost(p)$ over districts with a valued project;
+and the Gini coefficient of $(f_d)$. The theory predicts MES dominates on the realised $\beta$ and
+on the gap $|f_d-\beta_d|$, with the DEM intermediate and the UAM worst on low-salience districts.
+\end{definition}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{Testable implications of the theory}
+% ─────────────────────────────────────────────────────────────────────
+
+Each diagnostic proposition implies something one can actually look for --- in generated data now, in
+observed ballots later. Stating these turns the theory into hypotheses, which is what a referee will
+want to see.
+
+\begin{itemize}[nosep]
+  \item \textbf{From Proposition~\ref{prop:noise} (noise).} Within a district, vote shares should track
+        observable quality only weakly wherever noise dominates. Concretely: regress a project's
+        within-district vote share $V(p)/\sum_{q\in\Pset^d}V(q)$ on cost, scope, and type,
+        \emph{separately for each district}; a low $R^2$ in districts with many projects (large $k_d$)
+        is the signature of noise domination.
+  \item \textbf{From Proposition~\ref{prop:mob} (mobilization).} A district with a major institutional
+        anchor should record more votes than its residents could cast alone:
+        $V(\Pset^d)/(n_d\,\votes)>1$ for anchor districts.
+  \item \textbf{From Proposition~\ref{prop:equity} (equity).} Funded budget per district should
+        correlate \emph{negatively} with district need under the DEM (more marginal districts get less),
+        and that correlation should move toward zero under the Method of Equal Shares. Choose the need
+        proxy deliberately --- it is the same modelling choice as the equity benchmark of
+        Section~\ref{sec:distortions}. Since we are \emph{not} using a CONAPO marginalization index, a
+        natural stand-in is (inverse) salience, or a population-adjusted funding share; whatever the
+        choice, state it and keep it consistent with the benchmark in Definition~\ref{def:geo}.
+\end{itemize}
+
+\begin{aside}\small
+\textbf{Generating synthetic ballots.} For the simulation, draw each voter's district (or, under the
+Method of Equal Shares, their approval scope) and within-scope weights from distributions calibrated to
+plausible --- later, observed --- vote shares. A convenient generator is a Dirichlet-multinomial centred
+on target within-district shares, with the approval ballot read off as $A_i=\{p:x_{i,p}\ge1\}$. When
+real DEM vote totals (e.g.\ from a past \emph{presupuesto participativo}) become available, calibrate
+the same generator to them; the synthetic exercise then becomes a genuine counterfactual --- run the
+Method of Equal Shares on the calibrated ballots and compare the funded set, the welfare measures of
+Definition~\ref{def:welfare}, and the equity measures of Definition~\ref{def:equity-metrics} against
+what the DEM actually produced.
+\end{aside}
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{Design levers and robustness}
+% ─────────────────────────────────────────────────────────────────────
+
+Vary, and report sensitivity to: the salience profile $(\salience_d)$ and how $\sigma_i$ is drawn;
+the share of mobile (cross-district) voters; the intensity $c$ of institutional mobilization; the
+spread of project costs relative to the per-voter share $\budget/n$ (this governs how much MES funds
+directly versus in completion); and the completion rule. The qualitative ranking from
+Section~\ref{sec:comparison} should be stable across these; any instability is itself a finding worth
+reporting rather than hiding.
+
+% ─────────────────────────────────────────────────────────────────────
+\subsection{An implementation design for Durango}
+% ─────────────────────────────────────────────────────────────────────
+
+A concrete, defensible design to show the municipality:
+\begin{enumerate}[label=\textbf{\arabic*.},nosep]
+  \item \textbf{Ballot.} List all projects, grouped by district, with descriptions and costs; let
+        voters approve any number --- no minimum, no maximum. Paper and digital both work.
+  \item \textbf{Shares.} Split the budget equally among registered voters; each share is virtual,
+        never real money.
+  \item \textbf{Run.} Execute the Method of Equal Shares transparently on the collected ballots
+        (open-source implementations exist, e.g.\ \texttt{equalshares.net}), and publish the
+        round-by-round trace so the result is auditable.
+  \item \textbf{Completion.} Spend any leftover greedily by approvals --- familiar, and it disposes of
+        the residue the main rule cannot place. Flag that completion carries no proportionality
+        guarantee, and design project cost tiers so the proportional phase reaches as far as
+        possible.
+\end{enumerate}
+
+\begin{connection}
+The pitch to Durango is not ``your system is broken'' but ``here is a transparent, auditable rule
+that funds the same obvious winners while guaranteeing every neighbourhood a fair share by
+construction --- and here is a simulation on plausible numbers showing the difference.'' That framing
+is what a data-sharing conversation can be built on.
+\end{connection}
+
+% ═════════════════════════════════════════════════════════════════════
+\section*{Reference shelf}
+\addcontentsline{toc}{section}{Reference shelf}
+% ═════════════════════════════════════════════════════════════════════
+
+\noindent\textbf{Cite, do not reprove:}
+\begin{itemize}[nosep]
+  \item Myerson (1981); Mas-Colell, Whinston \& Green, \emph{Microeconomic Theory}, ch.~23 --- the
+        Revelation Principle and Gibbard--Satterthwaite.
+  \item Gibbard (1973); Satterthwaite (1975) --- the impossibility theorem itself.
+  \item Peters, Pierczy\'nski \& Skowron (2021), ``Proportional Participatory Budgeting with
+        Additive Utilities'' --- the Method of Equal Shares, EJR, and the EJR/strategy-proofness
+        impossibility (their Thm.~4.8). The project site \texttt{equalshares.net} has
+        implementations and intuition.
+  \item Goel et al.\ (2019), ``Knapsack Voting'' --- the baseline PB model we extend.
+  \item Martinelli (2006), ``Would Rational Voters Acquire Costly Information?'' --- background for the
+        information function $\sigma$ and the noise result.
+\end{itemize}
+
+\bigskip
+\noindent\textbf{Names recap.} \emph{Ours (coined here):} District-Exclusivity Mechanism (DEM);
+Unrestricted Allocation Mechanism (UAM); district salience $\salience_d$; mobilizing institution and
+vote displacement $\Delta_\mathcal{C}$; $\beta$-geographic equity; the signal/noise framing.
+\emph{From the literature (cited):} Method of Equal Shares; Extended Justified Representation;
+cohesive group; Gibbard--Satterthwaite; the Revelation Principle; DSIC/BIC.
+
+\bigskip
+\noindent\emph{The full corrected statements, proofs, and the review trail that motivated each
+correction live in} \texttt{math-review/} \emph{and} \texttt{math-review/REVIEW-findings.md}.
+
+\end{document}
