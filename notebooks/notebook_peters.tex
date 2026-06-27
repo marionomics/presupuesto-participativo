@@ -1,0 +1,753 @@
+\documentclass[11pt,letterpaper]{article}
+
+% ── geometry & layout ────────────────────────────────────────────────
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{setspace}
+\onehalfspacing
+
+% ── math ─────────────────────────────────────────────────────────────
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[T1]{fontenc}
+
+% ── colour & boxes ───────────────────────────────────────────────────
+\usepackage[dvipsnames]{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\usepackage{booktabs,array,tabularx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathreplacing,matrix}
+\usepackage[round,authoryear]{natbib}
+\usepackage[colorlinks=true,linkcolor=MidnightBlue,citecolor=OliveGreen,urlcolor=BrickRed]{hyperref}
+
+% ── theorem environments ─────────────────────────────────────────────
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{example}{Example}[section]
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}{Proposition}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{corollary}{Corollary}[section]
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+
+% ── macros: PETERS-CANONICAL (see crosswalk, App. A) ──────────────────
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\voters}{N}            % set of voters
+\newcommand{\projects}{C}          % set of projects (candidates)
+\newcommand{\budget}{b}            % total budget
+\newcommand{\votes}{v}             % per-voter vote budget (DEM ballot width)
+\newcommand{\cost}{\mathrm{cost}}  % cost function, written cost(c)
+\newcommand{\Dist}{\mathcal{D}}    % set of districts
+\newcommand{\salience}{s}          % district salience  s_d   (was \alpha_d)
+\newcommand{\info}{\kappa}         % voter information fn  kappa_i  (was \sigma_i)
+\newcommand{\popshare}{\pi}        % district population share  pi_d  (was \beta_d)
+\newcommand{\DEM}{\mathrm{DEM}}
+\newcommand{\UAM}{\mathrm{UAM}}
+\newcommand{\MES}{\mathrm{MES}}
+\newcommand{\EJR}{\mathrm{EJR}}
+\newcommand{\FJR}{\mathrm{FJR}}
+\newcommand{\PJR}{\mathrm{PJR}}
+\newcommand{\JRax}{\mathrm{JR}}
+\newcommand{\GCR}{\mathrm{GCR}}
+\newcommand{\PAV}{\mathrm{PAV}}
+\newcommand{\PSC}{\mathrm{PSC}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+% ── pedagogical boxes (identical to notebook_v2) ──────────────────────
+\newtcolorbox{keyidea}{colback=OliveGreen!6,colframe=OliveGreen!65,
+  fonttitle=\bfseries,title={Key idea},boxsep=2pt,left=5pt,right=5pt,top=3pt,bottom=3pt}
+\newtcolorbox{intuition}{colback=MidnightBlue!5,colframe=MidnightBlue!60,
+  fonttitle=\bfseries,title={Intuition},boxsep=2pt,left=5pt,right=5pt,top=3pt,bottom=3pt}
+\newtcolorbox{connection}{colback=TealBlue!6,colframe=TealBlue!60,
+  fonttitle=\bfseries,title={Connection to Durango},boxsep=2pt,left=5pt,right=5pt,top=3pt,bottom=3pt}
+\newtcolorbox{naming}{colback=Violet!6,colframe=Violet!65,
+  fonttitle=\bfseries,title={A name we are introducing (our label, not standard terminology)},
+  boxsep=2pt,left=5pt,right=5pt,top=3pt,bottom=3pt}
+\newtcolorbox{watchout}{colback=BrickRed!5,colframe=BrickRed!60,
+  fonttitle=\bfseries,title={Watch out --- a subtle point that is easy to get wrong},
+  boxsep=2pt,left=5pt,right=5pt,top=3pt,bottom=3pt}
+\newtcolorbox{aside}{colback=Dandelion!8,colframe=Dandelion!80!black,
+  boxsep=2pt,left=5pt,right=5pt,top=3pt,bottom=3pt}
+
+% ── header ───────────────────────────────────────────────────────────
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\textit{Foundations Notebook --- built on Peters, Pierczy\'nski \& Skowron}}
+\fancyhead[R]{\small\textit{Equal Shares for Durango PB}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\title{%
+  \vspace{-0.8cm}
+  {\large\scshape Foundations Notebook --- canonical base}\\[0.6em]
+  {\LARGE\bfseries The Method of Equal Shares,\\[0.2em] founded on Peters--Pierczy\'nski--Skowron,\\[0.2em] applied to Durango}\\[0.5em]
+  {\large Notation, definitions, and theory re-derived on the rock of\\[0.2em]
+  \emph{Proportional Participatory Budgeting with Additive Utilities}}
+}
+\author{\textbf{Mario Alberto Garc\'ia Meza}\\[2pt]
+  \small Facultad de Econom\'ia, Contadur\'ia y Administraci\'on\\
+  \small Universidad Ju\'arez del Estado de Durango (FECA--UJED)}
+\date{June 2026 \;\textbullet\; Tight first cut (Sections 1--7 complete; Section 8 a stub)}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\begin{abstract}
+\noindent This notebook re-founds our entire participatory-budgeting (PB) theory on a single
+source: Peters, Pierczy\'nski \& Skowron's \emph{Proportional Participatory Budgeting with
+Additive Utilities} (arXiv:2008.13276v2; NeurIPS~2021). We adopt their notation and definitions
+wholesale, reproduce the load-bearing results (the Method of Equal Shares, Extended and Fully
+Justified Representation, the core, priceability), and then rebuild our Durango contribution on
+top: the District-Exclusivity Mechanism (DEM), its distortions, and the case that Equal Shares
+repairs them while delivering geographic equity \emph{by construction}. Remarkably, Peters et
+al.'s own motivating example---\emph{Circleville}, a city run as separate district elections---is
+our Durango critique almost verbatim. This is the canonical reference for the project; its section
+order is the intended skeleton of the paper.
+\end{abstract}
+
+\begin{aside}
+\small\textbf{How to read this, and three conventions.}
+\textbf{(1) Boxes.} Green = the load-bearing idea; blue = intuition; teal = the bridge to Durango;
+\emph{red ``Watch out''} = a subtle point that is genuinely easy to get wrong; violet = a label we
+are coining (so you can always tell ours from the literature's).
+\textbf{(2) Provenance.} The Method of Equal Shares, EJR, FJR, the core, priceability, PAV, PSC,
+and GCR are \emph{theirs} and are cited. The District-Exclusivity Mechanism, the Unrestricted
+Allocation Mechanism, district \emph{salience}, the voter \emph{information function}, and
+\emph{$\popshare_d$-geographic equity} are \emph{ours} and are flagged in violet boxes.
+\textbf{(3) Notation.} We now follow Peters et al.\ exactly. Appendix~\ref{app:crosswalk} gives the
+crosswalk from our old \texttt{notebook\_v2} symbols; the headline changes are
+$\projects$ for projects, $\budget$ for budget, $\cost(\cdot)$ for cost, plain $\rho$ for the
+Equal-Shares threshold, and the renamings $s_d$ (salience), $\kappa_i$ (information), $\pi_d$
+(population share) that free $\alpha,\sigma,\beta$ for their roles in Peters et al.
+\end{aside}
+
+\tableofcontents
+\newpage
+
+% ═════════════════════════════════════════════════════════════════════
+\section{Introduction: from Circleville to Durango}
+\label{sec:intro}
+
+A growing number of cities allocate part of their budget by \emph{participatory budgeting} (PB):
+residents vote over candidate projects, and a rule turns the ballots into a funded set subject to
+a budget constraint (\citealp{cabannes2004}; \citealp{wampler2021}; \citealp{azizshah2020}). The
+question this project asks is narrow and practical: \emph{is the rule Durango uses a good one, and
+if not, what should replace it?}
+
+Peters, Pierczy\'nski \& Skowron (2021) open with a fictional city, \textbf{Circleville}, split into
+four districts of unequal size. If projects are local and residents vote only for their own
+district's projects, then a single city-wide ``most-votes-win'' count hands the entire budget to
+the largest district---what they call \emph{the tyranny of the largest minority}. The standard fix
+is to \emph{run separate elections per district}, dividing the budget in advance (often in
+proportion to population) and letting residents vote only locally. Peters et al.\ then catalogue
+exactly what that fix breaks:
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt,topsep=2pt]
+  \item \textbf{Boundary projects are orphaned.} A project on the border of two districts must be
+  assigned to one; residents of the other cannot vote for it, so it is under-funded relative to its
+  true value.
+  \item \textbf{City-wide goods are hard to place.} A project benefiting the whole city has no
+  natural district.
+  \item \textbf{Non-geographic interest groups are silenced.} Parents, or cyclists, spread across
+  the city cannot form a voting bloc, even when their shared project would be highly valuable.
+\end{itemize}
+
+\begin{connection}
+Durango's \emph{presupuesto participativo} \textbf{is Circleville's ``separate district
+elections.''} A resident selects one district and casts a fixed number of votes
+($\votes$, e.g.\ six) \emph{within} that district only. This is precisely the fix Peters et al.\
+diagnose---so their critique is, line for line, our motivation. Our contribution is to (i) make the
+distortions precise as propositions in their model, with Durango's institutional detail, and (ii)
+argue that their remedy, the Method of Equal Shares, is the right reform for Durango because it
+keeps a single city-wide election while protecting marginalized districts \emph{by construction}.
+\end{connection}
+
+Two features of the Durango setting are not incidental; they shape the whole problem and must stay
+central.
+
+\begin{naming}
+\textbf{The voter information function $\kappa_i$ (rational ignorance).} A voter typically knows
+only the projects in her immediate circle. Under Durango's rule she must nonetheless spend
+\emph{all} $\votes$ votes inside her chosen district---including on projects she has never heard of.
+We write $\kappa_i \subseteq \projects$ for the set of projects voter $i$ can actually evaluate.
+The mechanism forces votes outside $\kappa_i$, converting ignorance into noise. (Background:
+rational ignorance, Downs 1957; costly information in voting, Martinelli 2006.)
+\end{naming}
+
+\begin{naming}
+\textbf{District salience $s_d$ and the centralization risk.} Removing the district constraint
+entirely (our \emph{Unrestricted Allocation Mechanism}, \S\ref{sec:model}) lets high-visibility
+city-center projects absorb the vote. We capture visibility by a \emph{salience} parameter $s_d$
+per district: high-$s_d$ districts attract attention, low-$s_d$ (often marginalized) districts get
+none. The district constraint is a \emph{blunt equity instrument}---it protects low-salience
+districts by accident. The reform must preserve that protection deliberately, not discard it.
+\end{naming}
+
+\begin{keyidea}
+The design target Peters et al.\ identify, and which we adopt for Durango, is: \emph{a single
+city-wide election whose rule spends money proportionally}, automatically identifying groups with
+common interests (geographic or not) and guaranteeing each its fair share. That target is made
+precise by the axiom \emph{Extended Justified Representation} (EJR) and met by the \emph{Method of
+Equal Shares}.
+\end{keyidea}
+
+The rest of the notebook follows Peters et al.'s architecture: the model
+(\S\ref{sec:model}), the Method of Equal Shares (\S\ref{sec:mes}), the proportionality axioms
+(\S\ref{sec:axioms}), then our Durango layer---the DEM's distortions (\S\ref{sec:distortions}),
+their repair under Equal Shares (\S\ref{sec:repair}), the three-way comparison
+(\S\ref{sec:comparison}), and the simulation design (\S\ref{sec:simulation}).
+
+% ═════════════════════════════════════════════════════════════════════
+\section{The participatory-budgeting model}
+\label{sec:model}
+
+We use Peters et al.'s model verbatim, then add the few district-level objects Durango needs.
+For $t\in\mathbb{N}$ write $[t]=\{1,\dots,t\}$.
+
+\begin{definition}[Election; general PB model]
+An \emph{election} is a tuple $E=(\voters, \projects, \budget, \cost, \{u_i\}_{i\in \voters})$ where
+\begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
+  \item $\voters=[n]$ is the set of \emph{voters} and $\projects=\{c_1,\dots,c_m\}$ the set of
+  \emph{projects} (candidates);
+  \item $\budget\in\Q_{\ge 0}$ is the available \emph{budget};
+  \item $\cost\colon \projects\to\Q_{\ge 0}$ gives each project's cost, extended to sets by
+  $\cost(T)=\sum_{c\in T}\cost(c)$;
+  \item each $u_i\colon \projects\to\Q_{\ge 0}$ is voter $i$'s \emph{additive} utility, so a funded
+  set $T$ gives $i$ utility $u_i(T)=\sum_{c\in T}u_i(c)$; for $S\subseteq \voters$ write
+  $u_S(T)=\sum_{i\in S}u_i(T)$. We assume $u_\voters(c)>0$ for every $c$.
+\end{itemize}
+A set $W\subseteq \projects$ is \emph{feasible} if $\cost(W)\le \budget$; a feasible $W$ is an
+\emph{outcome}. An \emph{(aggregation) rule} $R$ maps each election $E$ to an outcome $R(E)$.
+\end{definition}
+
+\begin{definition}[Two special cases]
+\emph{Committee elections / unit costs:} $\budget\in\mathbb{N}$ and $\cost(c)=1$ for all $c$, so
+$W$ is feasible iff $|W|\le \budget$ (a committee of size $\budget$).
+\emph{Approval utilities:} $u_i(c)\in\{0,1\}$; then $A(i)=\{c: u_i(c)=1\}$ is $i$'s
+\emph{approval set}, and $c\in A(i)\cap W$ is a \emph{representative} of $i$ in $W$.
+\end{definition}
+
+\begin{watchout}
+Two utility readings of the \emph{same} approval ballot differ once costs vary. Under
+\emph{approval utilities} a voter's satisfaction is the \emph{number} of her approved projects that
+get funded ($u_i(c)=1$). Under \emph{cost utilities} it is the total \emph{money} spent on them
+($u_i(c)=\cost(c)$). Peters et al.\ note the latter is often closer to the truth (their Paris
+example: a project $186\times$ more expensive but only $1.15\times$ more popular). Which reading we
+use is a modeling choice we must make explicit in the simulation (\S\ref{sec:simulation}).
+\end{watchout}
+
+\subsection{Durango-specific objects}
+
+To talk about Durango we layer a district structure on top of the general model.
+
+\begin{definition}[District structure]
+Let $\Dist$ be a set of \emph{districts}. A map $\delta\colon \projects\to\Dist$ assigns each
+project to a district, and each voter $i$ resides in a district $d(i)\in\Dist$. Write
+$n_d=|\{i: d(i)=d\}|$ for the population of district $d$, and $\popshare_d=n_d/n$ for its
+\emph{population share}. A pre-divided budget assigns $\budget_d$ to district $d$ with
+$\sum_d \budget_d=\budget$ (Durango uses $\budget_d \approx \popshare_d\,\budget$).
+\end{definition}
+
+\begin{naming}
+\textbf{District salience} $s_d\in\R_{>0}$ scales how much attention/turnout district $d$'s projects
+attract in an \emph{unconstrained} election. \textbf{The information function} $\kappa_i\subseteq
+\projects$ is the set of projects voter $i$ can evaluate. Both are ours, not Peters et al.'s.
+\end{naming}
+
+\begin{naming}
+\textbf{The District-Exclusivity Mechanism ($\DEM$).} Each voter $i$ selects exactly one district
+$d_i\in\Dist$ and allocates her $\votes$ votes among projects in $d_i$ \emph{only}. Within each
+district, projects are funded in decreasing order of total votes until $\budget_d$ is exhausted.
+This is Durango's actual rule and Peters et al.'s ``separate district elections.''
+\end{naming}
+
+\begin{naming}
+\textbf{The Unrestricted Allocation Mechanism ($\UAM$).} The same ballot but with no district
+restriction: a voter may direct her $\votes$ votes at \emph{any} projects, and projects are funded
+in decreasing order of total votes against the single global budget $\budget$. This is the naive
+``most-votes-win'' city-wide rule---the one that yields the tyranny of the largest (most salient)
+minority.
+\end{naming}
+
+\begin{intuition}
+$\DEM$ and $\UAM$ are the two poles Peters et al.\ warn about: $\UAM$ centralizes (high-$s_d$
+districts win everything), $\DEM$ fragments (the per-district fix that orphans boundary projects,
+silences city-wide groups, and---via $\kappa_i$---forces uninformed votes). The Method of Equal
+Shares is the third option that avoids both poles.
+\end{intuition}
+
+% ═════════════════════════════════════════════════════════════════════
+\section{The Method of Equal Shares}
+\label{sec:mes}
+
+\begin{naming}
+The \emph{Method of Equal Shares} ($\MES$) is \textbf{not} ours; it is Peters et al.'s rule
+(originally ``Rule~X,'' Peters \& Skowron 2020). We restate it exactly.
+\end{naming}
+
+\begin{definition}[Method of Equal Shares]
+\label{def:mes}
+Give each voter an equal share $\budget/n$ of the budget. Start with $W=\varnothing$ and add
+projects one at a time. For a chosen $c$, let $p_i(c)\ge 0$ be $i$'s payment, with
+$\sum_{i\in \voters}p_i(c)=\cost(c)$; write $p_i(W)=\sum_{c\in W}p_i(c)$ and the remaining balance
+$b_i=\budget/n-p_i(W)$. For $\rho\ge 0$, a project $c\notin W$ is \emph{$\rho$-affordable} if
+\[
+  \sum_{i\in \voters}\min\bigl(b_i,\; u_i(c)\cdot \rho\bigr)=\cost(c).
+\]
+If no project is $\rho$-affordable for any $\rho$, $\MES$ terminates and returns $W$. Otherwise it
+selects a $c\notin W$ that is $\rho$-affordable for the \emph{minimum} $\rho$, with payments
+$p_i(c)=\min(b_i,\,u_i(c)\cdot\rho)$.
+\end{definition}
+
+\begin{keyidea}
+Each voter pays \emph{per unit of her utility}, at a common price $\rho$, capped at her remaining
+balance. Projects enter in increasing order of $\rho$, i.e.\ in \emph{decreasing order of utility
+per dollar}. So $\MES$ favours cheap projects, projects with many supporters, and projects whose
+supporters still hold money (those whose preferences are so far least satisfied).
+\end{keyidea}
+
+\begin{watchout}
+We now write the threshold as plain $\rho$, matching Peters et al. In the old \texttt{notebook\_v2}
+it was $\varrho$ (\texttt{\textbackslash mesrho}) to dodge a LaTeX clash; that dodge is retired.
+\end{watchout}
+
+\paragraph{Approval special case.} With $u_i(c)\in\{0,1\}$, $c$ is $\rho$-affordable iff its cost
+can be covered by its approvers so that each pays at most $\rho$: approvers with less than $\rho$
+left spend all they have, the rest pay exactly $\rho$. Cost is split \emph{as equally as
+possible}---hence ``Equal Shares.'' The first project chosen is the affordable one maximizing
+\emph{approvers per dollar}.
+
+\paragraph{Computing $\rho$ (Algorithm 1).} For $c\notin W$ with supporters $i_1,\dots,i_t$ (those
+with $u_i(c)>0$), sort by $b_{i}/u_{i}(c)$ ascending. Supporters who exhaust their balance attain
+the cap in the first coordinate. Iterating $s=1,\dots,t$, the candidate value is
+\[
+  \rho \;=\; \frac{\cost(c)-\bigl(b_{i_1}+\cdots+b_{i_{s-1}}\bigr)}{u_{i_s}(c)+\cdots+u_{i_t}(c)},
+\]
+accepted as soon as $\rho\cdot u_{i_s}(c)\le b_{i_s}$. The rule then picks
+$c=\argmin_{c\notin W}\rho(c)$. With running partial sums this is $O(m^2 n\log n)$.
+
+\begin{example}[Equal Shares, worked (Peters et al.'s instance)]
+Ten voters, budget $\budget=\$100$ (so each starts with $\$10$), approval utilities, five projects:
+P1 $\$36$ approved by $i_1$--$i_5$; P2 $\$36$ by $i_1$--$i_6$; P3 $\$25$ by $i_1$--$i_5$;
+P4 $\$24$ by $i_4$--$i_7$; P5 $\$24$ by $i_6$--$i_9$. Round 1 thresholds: $\rho_{P1}=7.2$,
+$\rho_{P2}=6$, $\rho_{P3}=5$, $\rho_{P4}=\rho_{P5}=6$. $\MES$ funds \textbf{P3} (lowest $\rho$);
+$i_1$--$i_5$ each pay $\$5$. Now P1, P2 are unaffordable (supporters too poor); recomputing,
+$\rho_{P4}=7$, $\rho_{P5}=6$, so $\MES$ funds \textbf{P5}; $i_6$--$i_9$ pay $\$6$. Nothing else is
+affordable: $W=\{\text{P3},\text{P5}\}$, spending only $\$49$ of $\$100$. The leftover illustrates
+\emph{non-exhaustiveness} (\S\ref{sec:axioms}); completion methods address it.
+\end{example}
+
+\begin{connection}
+Read the five projects as Durango projects from different districts and the ten voters as a mixed
+electorate. $\MES$ never asked anyone to ``spend all six votes in one district.'' A voter pays only
+for projects she actually values---exactly what $\kappa_i$ demands---and a small, cohesive group
+(e.g.\ supporters of P5) secures its project out of \emph{its own} share, with no district quota
+imposed from above.
+\end{connection}
+
+% ═════════════════════════════════════════════════════════════════════
+\section{Proportionality: EJR, the core, priceability, FJR}
+\label{sec:axioms}
+
+\subsection{Why not just maximize welfare? (Theorem 1)}
+
+\begin{theorem}[Costs matter; \citealp{peters2021}]
+\label{thm:welfarism}
+Every rule that depends only on voters' utility functions and on the collection of budget-feasible
+sets must fail proportionality---even on instances with a clean district structure.
+\end{theorem}
+
+\begin{intuition}
+\emph{Onetown vs.\ Twotown.} Two cities with identical voters, districts, and approval sets, and
+even identical feasibility constraints, but different \emph{costs}. Proportional Approval Voting
+(PAV), which maximizes $\sum_i H(|A(i)\cap W|)$ with $H$ the harmonic number, must return the same
+outcome in both---yet the proportional outcome differs between them. Hence any welfare-optimizing
+rule that ignores costs cannot be proportional once costs vary. This is why we cannot simply ``run
+PAV'' on Durango, and why a \emph{cost-aware, sequential} rule like Equal Shares is needed.
+\end{intuition}
+
+\subsection{Extended Justified Representation (EJR)}
+
+EJR formalizes ``no cohesive group is under-served.'' Peters et al.\ build it in three steps.
+
+\begin{definition}[EJR, committee/unit-cost; \citealp{aziz2017}]
+A group $S$ is \emph{$\ell$-cohesive} if $|S|\ge \tfrac{\ell}{\budget}\,n$ and
+$\bigl|\bigcap_{i\in S}A(i)\bigr|\ge \ell$. A rule satisfies \emph{EJR} if for every $\ell$ and
+every $\ell$-cohesive $S$ there is $i\in S$ with $|A(i)\cap R(E)|\ge \ell$.
+\end{definition}
+
+\begin{definition}[EJR, approval, general costs]
+$S$ is \emph{$T$-cohesive} ($T\subseteq \projects$) if $|S|/n\ge \cost(T)/\budget$ and
+$T\subseteq\bigcap_{i\in S}A(i)$. EJR requires some $i\in S$ with $|A(i)\cap R(E)|\ge |T|$.
+\end{definition}
+
+\begin{definition}[EJR, general additive]
+\label{def:ejr}
+$S$ is \emph{$(\alpha,T)$-cohesive}, for $\alpha\colon \projects\to[0,1]$ and $T\subseteq
+\projects$, if $|S|/n\ge \cost(T)/\budget$ and $u_i(c)\ge \alpha(c)$ for all $i\in S,\,c\in T$. A
+rule satisfies \emph{EJR} if for every such $S$ there is $i\in S$ with
+$u_i(R(E))\ge \sum_{c\in T}\alpha(c)$.
+\end{definition}
+
+\begin{keyidea}
+A group that is an $|S|/n$ fraction of voters and can name an affordable bundle $T$ they all value
+is ``owed'' the utility of $T$---and EJR guarantees \emph{at least one} member actually gets it.
+The ``at least one'' is not a weakness: requiring it for \emph{every} member is impossible even on
+tiny instances (\citealp{aziz2017}).
+\end{keyidea}
+
+\begin{watchout}
+EJR is genuinely demanding here. With a single voter, an EJR outcome must solve the
+\emph{knapsack} problem; since knapsack is (weakly) NP-hard, \emph{no strongly polynomial rule can
+satisfy EJR exactly in the general additive model} (Peters et al., Prop.~1). Equal Shares is
+polynomial, so it cannot satisfy EJR exactly there---only ``up to one project.''
+\end{watchout}
+
+\begin{definition}[EJR up to one project]
+\label{def:ejr1}
+$R$ satisfies \emph{EJR up to one project} if for every $(\alpha,T)$-cohesive $S$ there is
+$i^\ast\in S$ such that either $u_{i^\ast}(R(E))\ge\sum_{c\in T}\alpha(c)$, or for some $c^\ast\in
+T$, $u_{i^\ast}(R(E)\cup\{c^\ast\})>\sum_{c\in T}\alpha(c)$.
+\end{definition}
+
+\begin{theorem}[\citealp{peters2021}]
+\label{thm:mes-ejr}
+The Method of Equal Shares satisfies EJR up to one project in the general PB model. In the
+approval-based model (any costs) the ``up to one'' clause never bites, so $\MES$ satisfies EJR
+\emph{exactly}.
+\end{theorem}
+
+\begin{proof}[Proof idea (the three-runs argument)]
+Fix an $(\alpha,T)$-cohesive $S$; set $\alpha_c=\min_{i\in S}u_i(c)$ and $\alpha=\sum_{c\in
+T}\alpha_c$. Compare three runs of $\MES$: (A) the real run, output $W$; (B) the run in which
+voters of $S$ face \emph{no} budget cap when buying projects of $T$; (C) a shrunken run with only
+$S$ and only $T$, unlimited budgets, and $u_i(c)=\alpha_c$. In (C) each $c\in T$ is
+$\sigma_c$-affordable with $\sigma_c=\cost(c)/(|S|\alpha_c)$. Track, for a fixed voter $i^\ast$, the
+money $f_{(B)}(x)$ and $f_{(C)}(x)$ needed to reach utility $x$. One shows
+$f_{(C)}(x)\ge f_{(B)}(x)$ (the slope of $f_{(C)}$, namely $\sigma_{c_s}$, dominates that of
+$f_{(B)}$, because in (B) there are extra payers and weakly higher utilities). Since
+$f_{(C)}(\alpha)=\cost(T)/|S|\le \budget/n$, we get $f_{(B)}(\alpha)\le \budget/n$: by the time
+$i^\ast$ has spent her whole share she has reached utility $\alpha$ (giving the exact bound), or
+overshoots on one extra project $c^\ast\in T$ (the ``up to one'' case). \hfill
+\end{proof}
+
+\begin{corollary}[District proportionality, the easy case]
+\label{cor:district}
+If every voter in district $d$ approves exactly the projects of $d$, they form a $T$-cohesive group
+for $T$ any affordable bundle of $d$'s projects with $\cost(T)\le \popshare_d\,\budget$. By
+Theorem~\ref{thm:mes-ejr}, $\MES$ funds at least $|T|$ of them for some member---so district $d$
+controls at least its population share $\popshare_d$ of the budget.
+\end{corollary}
+
+\begin{connection}
+Corollary~\ref{cor:district} is the heart of the Durango argument. The DEM \emph{imposes}
+$\budget_d\approx\popshare_d\,\budget$ from above (a quota). $\MES$ \emph{produces} the same
+$\popshare_d$ floor \emph{endogenously}, while \emph{also} representing non-geographic groups
+(parents, cyclists) and never forcing an uninformed vote. We name this guarantee
+$\popshare_d$-\emph{geographic equity} and develop it in \S\ref{sec:repair}.
+\end{connection}
+
+\subsection{Stronger and weaker neighbours: the JR lattice}
+
+\begin{definition}[The core]
+$W$ is in the \emph{core} if for every $S\subseteq \voters$ and $T\subseteq \projects$ with
+$|S|/n\ge\cost(T)/\budget$ there is $i\in S$ with $u_i(W)\ge u_i(T)$.
+\end{definition}
+
+The core lets a group propose \emph{any} affordable counter-bundle (not just a unanimously liked
+one), so it implies EJR. It may be \emph{empty}, even with unit costs (Peters et al., Example~2),
+which is why EJR---restricting to cohesive $T$---is the workable target. Equal Shares nonetheless
+\emph{approximates} the core:
+
+\begin{theorem}[\citealp{peters2021}]
+With $u_{\max}/u_{\min}$ the ratio of the largest to smallest positive attainable voter utilities,
+the Equal-Shares outcome lies in the $\alpha$-core for $\alpha=4\log(2\,u_{\max}/u_{\min})$.
+\end{theorem}
+
+\begin{definition}[Priceability; \citealp{petersskowron2020}]
+\label{def:price}
+$W$ is \emph{priceable} if there is a budget $b'\ge\budget$ (each voter holding $b'/n$) and
+payments $p_i\colon \projects\to\R_{\ge0}$ with: (C1) $u_i(c)=0\Rightarrow p_i(c)=0$;
+(C2) $\sum_c p_i(c)\le b'/n$; (C3) each $c\in W$ is fully paid; (C4) nothing is paid for $c\notin
+W$; (C5) for each $c\notin W$ the unspent money of its supporters is $\le\cost(c)$. Equal Shares is
+always priceable---it builds the price system as it runs.
+\end{definition}
+
+\begin{definition}[Exhaustiveness; \citealp{aziztalmon2018}]
+$R$ is \emph{exhaustive} if no unfunded project fits in the remaining budget:
+$\cost(R(E)\cup\{c\})>\budget$ for every $c\notin R(E)$.
+\end{definition}
+
+\begin{watchout}
+Equal Shares is \emph{not} exhaustive: a project can remain affordable in the aggregate while its
+own supporters are individually too poor to buy it, and the rule then declines to fund it.
+Moreover exhaustiveness is \emph{incompatible} with priceability in general (Peters et al.,
+Example~3). Completion methods (next) restore spending when that is desired.
+\end{watchout}
+
+\paragraph{Completion methods (for the leftover budget).}
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt,topsep=2pt]
+  \item \emph{Varying the budget:} rerun $\MES$ with a gradually increased virtual budget $b'\ge
+  \budget$, stopping just before real spending would exceed $\budget$. Keeps equal voting power and
+  priceability; mirrors the d'Hondt divisor method.
+  \item \emph{Perturbation:} set tiny $u_i(c)=\varepsilon$ wherever utility was $0$; with all
+  utilities positive, $\MES$ is exhaustive (Peters et al., Prop.~2). Variant: $\varepsilon\cdot
+  \cost(c)$, which experiments suggest is preferable.
+  \item \emph{Utilitarian greedy:} spend the remainder on unfunded projects by total utility
+  $\sum_i u_i(c)$---this mimics the plurality rule cities already use.
+\end{itemize}
+
+\subsection{Fully Justified Representation (FJR)}
+
+\begin{definition}[FJR; \citealp{peters2021}]
+$S$ is \emph{weakly $(\beta,T)$-cohesive} if $|S|/n\ge\cost(T)/\budget$ and $u_i(T)\ge\beta$ for
+every $i\in S$. A rule satisfies \emph{FJR} if for each such $S$ some $i\in S$ has
+$u_i(R(E))\ge\beta$.
+\end{definition}
+
+FJR weakens cohesion (the bundle $T$ need not be unanimously liked project-by-project, only valued
+\emph{overall} by each member), so it sits strictly between EJR and the core:
+\[
+  \JRax \;\subset\; \PJR \;\subset\; \EJR \;\subset\; \FJR \;\subset\; \text{core}.
+\]
+Both PAV and Equal Shares \emph{fail} FJR (Peters et al., Examples 4--5). FJR is nonetheless
+satisfiable, by the \emph{Greedy Cohesive Rule}:
+
+\begin{definition}[Greedy Cohesive Rule (GCR)]
+Start with $W=\varnothing$ and all voters active. Repeatedly find a value $\beta>0$, an active group
+$S$, and $T\subseteq \projects\setminus W$ with $S$ weakly $(\beta,T)$-cohesive; among these pick
+the one maximizing $\beta$ (ties to smaller $\cost(T)$). Add $T$ to $W$, deactivate $S$. Stop when
+no such triple exists.
+\end{definition}
+
+\begin{theorem}[\citealp{peters2021}]
+GCR satisfies FJR. Its proof uses only monotonicity of utilities, so GCR satisfies FJR even for
+general monotone (non-additive) valuations.
+\end{theorem}
+
+\begin{watchout}
+GCR is custom-built for FJR and pays for it: it is \emph{not} polynomial, \emph{not} priceable or
+exhaustive on its own (though every GCR outcome can be \emph{completed} to a priceable one), and it
+can violate \emph{laminar proportionality} that Equal Shares respects (Peters et al., Examples
+6--7). For Durango, Equal Shares---EJR-satisfying, polynomial, priceable---remains the rule to
+propose; FJR/GCR is the theoretical ceiling we cite, not the rule we recommend.
+\end{watchout}
+
+% ═════════════════════════════════════════════════════════════════════
+\section{The DEM's distortions, in this framework}
+\label{sec:distortions}
+
+We now recast our five Durango distortions against the EJR baseline. (Full proofs live in
+\texttt{notebook\_v2}; here we state each crisply in Peters et al.'s notation and flag where the
+foundation sharpens it.) Throughout, $X^{\DEM}$ and $X^{\UAM}$ denote funded sets under the two
+mechanisms.
+
+\begin{proposition}[Truncation welfare loss]
+\label{prop:trunc}
+Because $\DEM$ forces all $\votes$ votes into one chosen district, a voter cannot express value for
+projects outside it. There exist profiles where $X^{\DEM}$ is strictly Pareto-dominated in
+utilitarian welfare $\sum_i u_i(\cdot)$ by an unconstrained outcome---boundary and city-wide
+projects (Circleville's $A,P$) are the canonical losers.
+\end{proposition}
+
+\begin{proposition}[Noise injection via $\kappa_i$]
+\label{prop:noise}
+Suppose voter $i$ values only projects in $\kappa_i$ but must cast $\votes$ votes in district
+$d_i$. Decompose a project's vote total as $V(c)=\text{signal}(c)+\eta(c)$, where $\eta(c)$
+collects votes from voters with $c\notin\kappa_i$. Then $\E[\eta(c)]$ is independent of $c$'s
+quality, and for small/low-salience projects $\eta$ can dominate signal---so vote totals are a
+biased proxy for value precisely where the budget is tightest.
+\end{proposition}
+
+\begin{proposition}[Coordination game]
+\label{prop:coord}
+District \emph{selection} under $\DEM$ is a strategic stage: a voter's optimal district depends on
+where others go (to clear within-district funding thresholds). The induced game has multiple Nash
+equilibria selecting different $X^{\DEM}$; focal points (salience $s_d$) drive selection.
+\end{proposition}
+
+\begin{proposition}[Mobilization advantage]
+\label{prop:mob}
+An organized institution (e.g.\ a university) acts as an equilibrium selector, steering its members
+into one district and displacing roughly $\votes\cdot|\text{members}|$ votes from those members'
+otherwise-preferred districts---an advantage unrelated to project quality.
+\end{proposition}
+
+\begin{proposition}[Equity tradeoff: why the constraint exists]
+\label{prop:equity}
+Under $\UAM$, salience dominates: with $s_{d_H}>s_{d_L}$, low-salience district $d_L$ can receive
+\emph{zero} funding. The $\DEM$'s per-district budgets $\budget_d$ prevent this---so the
+constraint, for all its faults, is an \emph{accidental equity instrument}. Any reform must keep the
+$\popshare_d$ floor it provides.
+\end{proposition}
+
+\begin{connection}
+Propositions \ref{prop:trunc}--\ref{prop:equity} are exactly Peters et al.'s informal Circleville
+complaints turned into propositions, plus two Durango-specific ones ($\kappa_i$ noise, mobilization)
+that their approval model does not foreground. The equity tradeoff (\ref{prop:equity}) is the pivot:
+it forbids the lazy reform ``just drop the constraint'' ($=\UAM$) and forces us to a rule that keeps
+the floor \emph{endogenously}.
+\end{connection}
+
+% ═════════════════════════════════════════════════════════════════════
+\section{How Equal Shares repairs each distortion}
+\label{sec:repair}
+
+\begin{proposition}[No truncation]
+Under $\MES$ there is a single city-wide ballot: a voter assigns utility to \emph{any} project, so
+boundary and city-wide projects compete on equal footing. The truncation of
+Prop.~\ref{prop:trunc} cannot arise.
+\end{proposition}
+
+\begin{proposition}[No forced noise]
+A voter pays only for projects with $u_i(c)>0$, i.e.\ within $\kappa_i$. No mechanism pressure
+converts ignorance into votes, removing the $\eta(c)$ term of Prop.~\ref{prop:noise}.
+\end{proposition}
+
+\begin{proposition}[Reduced coordination]
+There is no district to select, so the $\DEM$ selection game (Prop.~\ref{prop:coord}) disappears.
+$\MES$ is still not strategyproof (below), but the multiplicity of district-selection equilibria is
+gone.
+\end{proposition}
+
+\begin{proposition}[Bounded mobilization]
+An institution can still concentrate utility, but $\MES$ charges each supporter from her own share
+$\budget/n$: a bloc of size $k$ commands at most $k\budget/n$ of spending. Mobilization advantage is
+\emph{capped by group size}, not amplified by displacement as in Prop.~\ref{prop:mob}.
+\end{proposition}
+
+\begin{theorem}[$\popshare_d$-geographic equity]
+\label{thm:geoequity}
+\textbf{(Coined name; result is a corollary of EJR.)} Under $\MES$, if the residents of district
+$d$ can name an affordable bundle of $d$'s projects they all value, then $d$ commands at least its
+population share $\popshare_d$ of the budget. Hence no district is zero-funded as it can be under
+$\UAM$ (Prop.~\ref{prop:equity})---the equity the $\DEM$ provided by quota is provided by $\MES$ by
+construction (Corollary~\ref{cor:district}).
+\end{theorem}
+
+\begin{naming}
+We call the guarantee of Theorem~\ref{thm:geoequity} \emph{$\popshare_d$-geographic equity}. The
+\emph{name} is ours; the \emph{content} is Peters et al.'s EJR specialized to the district
+structure. Stating it as ``equity by construction'' is the paper's central selling point for the
+reform.
+\end{naming}
+
+\begin{proposition}[Honest limitation: $\MES$ is not strategyproof]
+\label{prop:notsp}
+There are profiles where a voter benefits from misreporting (concrete counterexample in
+\texttt{notebook\_v2}). \textbf{The operative reason is not Gibbard--Satterthwaite}---GS needs an
+unrestricted preference domain, which PB does not have---but the EJR-style tension itself: a rule
+delivering proportional shares cannot also be strategyproof (cf.\ Peters \& Skowron 2020 on the
+limits of welfarism). We report this openly rather than overclaim.
+\end{proposition}
+
+\begin{watchout}
+This is the one place where the foundation \emph{corrects} an earlier draft instinct: do not cite
+Gibbard--Satterthwaite for $\MES$'s non-strategyproofness. The PB domain is restricted; the right
+citation is the proportionality/welfarism literature (Peters \& Skowron 2020), not GS.
+\end{watchout}
+
+% ═════════════════════════════════════════════════════════════════════
+\section{Comparison: DEM vs.\ UAM vs.\ MES}
+\label{sec:comparison}
+
+\begin{center}\small\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{@{}lXXX@{}}
+\toprule
+\textbf{Property} & \textbf{DEM} (Durango now) & \textbf{UAM} (drop constraint) & \textbf{MES} (proposed) \\
+\midrule
+City-wide ballot          & No (one district) & Yes & Yes \\
+Boundary / city-wide goods & Orphaned & OK & OK \\
+Forces uninformed votes ($\kappa_i$) & Yes ($\votes$ per district) & No & No \\
+Geographic equity         & By quota $\budget_d$ & \textbf{None} (salience wins) & \textbf{By construction} ($\popshare_d$, EJR) \\
+Non-geographic groups     & Silenced & Plurality only & Represented (EJR) \\
+Proportionality axiom met & --- & --- (fails JR) & EJR (exact, approval) \\
+Priceable                 & --- & No & Yes \\
+Polynomial-time           & Yes & Yes & Yes ($O(m^2n\log n)$) \\
+Strategyproof             & No & No & No (Prop.~\ref{prop:notsp}) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{keyidea}
+$\UAM$ fixes $\DEM$'s fragmentation but destroys equity; $\DEM$ protects equity but fragments and
+adds noise. $\MES$ is the only column that is ``Yes/OK/By construction'' down the equity-and-voice
+rows while staying polynomial---which is the whole argument for the reform.
+\end{keyidea}
+
+% ═════════════════════════════════════════════════════════════════════
+\section{Toward the paper: the simulation \emph{(stub --- to expand)}}
+\label{sec:simulation}
+
+\begin{aside}\small
+\textbf{This section is intentionally a stub in the first cut.} It records the design so the build
+order is fixed; the full treatment comes once we lock the data model.
+\end{aside}
+
+Planned, mirroring Peters et al.'s experiments (their \S6) but on Durango ballots:
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt,topsep=2pt]
+  \item \textbf{Counterfactual.} Given the same ballots, compute $X^{\DEM}$ (actual) and
+  $X^{\MES}$; compare funded sets, utilitarian welfare, and the distribution of voter utility
+  (Peters et al.\ find global rules give \emph{more equal} utility and usually higher total than
+  separate district elections).
+  \item \textbf{Utility reading.} Run both \emph{approval} and \emph{cost} utilities (\S\ref{sec:model})
+  as a robustness axis.
+  \item \textbf{Completion.} Compare varying-budget vs.\ perturbation vs.\ utilitarian-greedy
+  completions (\S\ref{sec:axioms}).
+  \item \textbf{Equity metric.} Report each district's funded share against $\popshare_d$ to show
+  Theorem~\ref{thm:geoequity} bites empirically.
+  \item \textbf{Synthetic ballots.} If individual ballots are unavailable, generate ballots
+  consistent with published aggregates (votes per project, turnout per district).
+  \item \textbf{Out of scope here:} CONAPO need-weighting and the ENIGH welfare link (follow-up).
+\end{itemize}
+
+% ═════════════════════════════════════════════════════════════════════
+\appendix
+\section{Notation crosswalk: \texttt{notebook\_v2} $\to$ this notebook}
+\label{app:crosswalk}
+
+\begin{center}\small\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}lllX@{}}
+\toprule
+\textbf{Object} & \textbf{old (v2)} & \textbf{new} & \textbf{note} \\
+\midrule
+Voters                    & $N$          & $N$              & unchanged \\
+Projects                  & $\mathcal{P}$ & $C$ (item $c$)   & Peters; $c$ is one project \\
+Budget                    & $B$          & $b$              & Peters \\
+Cost                      & $c$ (macro)  & $\cost(\cdot)$   & frees $c$ for a project \\
+Per-voter votes (DEM)     & $v$          & $v$              & unchanged \\
+MES threshold             & $\varrho$    & $\rho$           & dodge retired \\
+EJR cohesion threshold    & ---          & $\alpha(c)$      & Peters \\
+FJR weak-cohesion thresh. & ---          & $\beta$          & Peters \\
+District salience         & $\alpha_d$   & $s_d$            & frees $\alpha$ \\
+Information function       & $\sigma_i$   & $\kappa_i$       & frees $\sigma$ ($\sigma_c$ in EJR proof) \\
+District population share & $\beta_d$    & $\pi_d$          & frees $\beta$ \\
+Signal / noise            & $S(p),\eta(p)$ & $S(c),\eta(c)$ & only the project symbol changes \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Keystone references to add to \texttt{references.bib}}
+\label{app:bib}
+
+The load-bearing citations from Peters et al.\ for our paper are collected in
+\texttt{notebooks/refs\_peters.bib} (BibTeX, ready to merge into \texttt{paper/references.bib}; the
+keys match the \texttt{\textbackslash citet}/\texttt{\textbackslash citealp} calls used above). The
+full list is rendered in the References below.
+
+\nocite{stolicki2020,munagala2022,thiele1895,azizlee2020,lackner2022,sanchez2017}
+\renewcommand{\bibsection}{\subsection*{References}}
+\bibliographystyle{plainnat}
+\bibliography{refs_peters}
+
+\begin{aside}\small
+\textbf{Status.} Tight first cut. Sections 1--7 are complete; Section~\ref{sec:simulation} is a
+deliberate stub. Full proofs of Propositions~\ref{prop:trunc}--\ref{prop:notsp} remain in
+\texttt{notebook\_v2} and will be migrated into this notation as we expand.
+\end{aside}
+
+\end{document}
