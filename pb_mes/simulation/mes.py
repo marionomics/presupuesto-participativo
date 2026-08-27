@@ -38,6 +38,7 @@ def run_mes(
     approvals: dict[str, set[str]],
     costs: dict[str, float],
     budget: float,
+    completar: bool = True,
 ) -> list[str]:
     """
     Method of Equal Shares.
@@ -50,6 +51,10 @@ def run_mes(
         Mapping from project_id to its cost.
     budget : float
         Total available budget.
+    completar : bool
+        Whether to run the greedy completion phase that spends the leftover
+        budget. Set to False to see the MES phase on its own, which is what
+        the paper's examples report (Equal Shares stops with money unspent).
 
     Returns
     -------
@@ -93,6 +98,9 @@ def run_mes(
 
         funded.append(best_p)
         remaining.remove(best_p)
+
+    if not completar:
+        return funded
 
     # ── Completion phase: greedy by approval count ──────────────────────
     # Use any remaining budget to fund additional projects, prioritising

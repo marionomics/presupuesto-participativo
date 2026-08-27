@@ -1,807 +1,645 @@
 % ══════════════════════════════════════════════════════════════════════
-%  Beamer Presentation
-%  On How Voting Mechanisms Affect Welfare and Equity
-%  for Participatory Budgeting: An Approach from Durango, Mexico
+%  Presentación — Presupuesto Participativo y reglas de conteo
+%  Base: Peters, Pierczyński & Skowron (2021), arXiv:2008.13276v2, pp. 1–11
 %
-%  Audience:  Policy / mixed (municipal government, civil society)
-%  Length:    ~45 minutes (~35 slides)
-%  Compile:   latexmk -pdf main.tex  (from presentation/)
+%  Audiencia:  no técnica (planeación municipal / gobierno)
+%  Duración:   ~20 min
+%  Compilar:   latexmk -pdf main.tex   (desde presentation/)
+%
+%  NOTA: el mapa de Circleville se recorta vectorialmente de la p. 2 de
+%  ../references/2008.13276v2.pdf — no es una captura de pantalla.
 % ══════════════════════════════════════════════════════════════════════
-\documentclass[12pt, aspectratio=169]{beamer}
+\documentclass[11pt, aspectratio=169]{beamer}
 
-% ── Theme ────────────────────────────────────────────────────────────
+% ── Tema ──────────────────────────────────────────────────────────────
 \usetheme[progressbar=frametitle, block=fill]{metropolis}
-\usepackage{appendixnumberbeamer}
+\setbeamertemplate{frame numbering}[fraction]
 
-% ── Colors ───────────────────────────────────────────────────────────
+% ── Idioma y tipografía ───────────────────────────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[sfdefault, scaled=.92]{FiraSans}
+\usepackage{newtxsf}
+\usepackage[spanish, es-nodecimaldot, es-noshorthands]{babel}
+\uselanguage{Spanish}
+\languagepath{Spanish}   % nombres de teoremas/definiciones en español
+
+% ── Colores ───────────────────────────────────────────────────────────
 \definecolor{ujedblue}{HTML}{003580}
 \definecolor{ujeddark}{HTML}{001F4D}
 \definecolor{ujedaccent}{HTML}{D4A017}
 \definecolor{mesdark}{HTML}{1A6B3A}
-\definecolor{demdark}{HTML}{8B1A1A}
-\definecolor{uamdark}{HTML}{4A4A8A}
+\definecolor{warndark}{HTML}{8B1A1A}
 
 \setbeamercolor{palette primary}{bg=ujedblue, fg=white}
 \setbeamercolor{progress bar}{fg=ujedaccent, bg=ujeddark}
 \setbeamercolor{title separator}{fg=ujedaccent}
+\setbeamercolor{progress bar in section page}{fg=ujedaccent, bg=ujedblue!25}
 \setbeamercolor{frametitle}{bg=ujedblue, fg=white}
-\setbeamercolor{alerted text}{fg=demdark}
+\setbeamercolor{alerted text}{fg=warndark}
 \setbeamercolor{example text}{fg=mesdark}
 
-% DEM/UAM/MES color helpers
-\newcommand{\cDEM}[1]{{\color{demdark}#1}}
-\newcommand{\cUAM}[1]{{\color{uamdark}#1}}
-\newcommand{\cMES}[1]{{\color{mesdark}#1}}
-
-% ── Packages ─────────────────────────────────────────────────────────
-\usepackage{amsmath,amssymb,mathtools}
-\usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
+% ── Paquetes ──────────────────────────────────────────────────────────
+\usepackage{amsmath, mathtools}
 \usepackage{booktabs}
-\usepackage{multirow}
+\usepackage{graphicx}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathreplacing}
-\usepackage[authoryear,round]{natbib}
-\usepackage{pifont}   % for \cmark / \xmark
-\newcommand{\cmark}{\ding{51}}
-\newcommand{\xmark}{\ding{55}}
+\usetikzlibrary{arrows.meta, positioning, calc}
+\usepackage[noend]{algpseudocode}
+\usepackage[authoryear, round]{natbib}
+\renewcommand{\bibsection}{}            % natbib no debe abrir una sección
+\setbeamertemplate{frametitle continuation}{}  % sin "I, II" al partir el frame
+\usepackage{appendixnumberbeamer}
 
-% ── Math macros (identical to shadow_paper.tex) ───────────────────────
-\newcommand{\voters}{N}
-\newcommand{\districts}{\mathcal{D}}
-\newcommand{\projects}{\mathcal{P}}
-\newcommand{\agents}{N}
-\newcommand{\D}{\mathcal{D}}
-\newcommand{\Pset}{\mathcal{P}}
-\newcommand{\votes}{v}
-\newcommand{\budget}{B}
-\newcommand{\util}{u}
-\newcommand{\info}{\sigma}
-\newcommand{\typespace}{\Theta}
-\newcommand{\outcomes}{X}
-\newcommand{\DEM}{\text{DEM}}
-\newcommand{\UAM}{\text{UAM}}
-\newcommand{\MES}{\text{MES}}
-\newcommand{\R}{\mathbb{R}}
-\newcommand{\E}{\mathbb{E}}
-\newcommand{\cost}{c}
-\newcommand{\vtotal}{V}
-\newcommand{\bshare}{b}
-\newcommand{\mesrho}{\varrho}
-\newcommand{\salience}{\alpha}
-\newcommand{\marg}{\mu}
-\newcommand{\Iid}{I_i^d}
-\newcommand{\Iidbar}{\bar{I}_i^d}
-\newcommand{\bdist}{\beta}
-\newcommand{\Ap}{A_i}
-\newcommand{\Np}{N(p)}
-\DeclareMathOperator*{\argmin}{arg\,min}
-\DeclareMathOperator*{\argmax}{arg\,max}
+% ── Notación (Peters et al., igual que paper/main.tex) ────────────────
+\newcommand{\voters}{N}                 % conjunto de votantes
+\newcommand{\projects}{C}               % conjunto de proyectos
+\newcommand{\budget}{b}                 % presupuesto
+\newcommand{\cost}{\mathrm{cost}}       % función de costo
+\newcommand{\util}{u}                   % utilidad
+\newcommand{\Dist}{\mathcal{D}}         % distritos
+\newcommand{\mesrho}{\ensuremath{\varrho}}          % umbral costo-por-apoyo (NO \rho)
+\newcommand{\MES}{\ensuremath{\mathrm{MES}}}
+\newcommand{\EJR}{\ensuremath{\mathrm{EJR}}}
 
-% ── Title ─────────────────────────────────────────────────────────────
-\title{Voting Mechanisms, Welfare, and Equity\\in Participatory Budgeting}
-\subtitle{\textit{Presupuesto Participativo}: An Approach from Durango, Mexico}
-\author{Mario}
-\institute{FECA-UJED \textbar{} Universidad Juárez del Estado de Durango}
-\date{2026}
+% ── Barras de dinero para el ejemplo (redibujadas en TikZ) ────────────
+\newcommand{\mbsc}{0.155}   % cm por unidad monetaria
+\newcommand{\mbw}{0.42}     % ancho de barra
+\newcommand{\mbsep}{0.66}   % separación entre barras
 
-% ══════════════════════════════════════════════════════════════════════
+% \vbar{índice}{etiqueta}{saldo}{pago}
+\newcommand{\vbar}[4]{%
+  \fill[mesdark!30] ({#1*\mbsep},0) rectangle ({#1*\mbsep+\mbw},{#4*\mbsc});
+  \draw[semithick, gray!60] ({#1*\mbsep},0) rectangle ({#1*\mbsep+\mbw},{#3*\mbsc});
+  \node[font=\tiny, gray!70] at ({#1*\mbsep+\mbw/2},{#3*\mbsc+0.17}) {#3};
+  \node[font=\tiny\bfseries, mesdark] at ({#1*\mbsep+\mbw/2},{#4*\mbsc/2}) {#4};
+  \node[font=\tiny] at ({#1*\mbsep+\mbw/2},-0.24) {$#2$};}
+
+% \vbaro{índice}{etiqueta}{saldo}  (sin pago)
+\newcommand{\vbaro}[3]{%
+  \draw[semithick, gray!60] ({#1*\mbsep},0) rectangle ({#1*\mbsep+\mbw},{#3*\mbsc});
+  \node[font=\tiny, gray!70] at ({#1*\mbsep+\mbw/2},{#3*\mbsc+0.17}) {#3};
+  \node[font=\tiny] at ({#1*\mbsep+\mbw/2},-0.24) {$#2$};}
+
+% ── Caja destacada sin barra de título ───────────────────────────────
+\newcommand{\keybox}[1]{%
+  \begin{beamercolorbox}[wd=\textwidth, sep=10pt]{block body}
+    \centering #1
+  \end{beamercolorbox}}
+
+% ── Título ────────────────────────────────────────────────────────────
+\title{Cómo la regla de conteo determina el resultado\\ de un presupuesto participativo}
+\subtitle{El Método de Partes Iguales \textnormal{(\emph{Method of Equal Shares})}}
+\author{Mario A. García Meza}
+\institute{Facultad de Economía, Contaduría y Administración\\ Universidad Juárez del Estado de Durango}
+\date{}   % ← poner aquí sede y fecha al presentar
+
 \begin{document}
-% ══════════════════════════════════════════════════════════════════════
 
-\begin{frame}[plain,shrink=20]
-  \titlepage
-\end{frame}
+\maketitle
 
-% ── Outline ──────────────────────────────────────────────────────────
-\begin{frame}[shrink=20]{Roadmap}
+\begin{frame}{Ruta}
   \tableofcontents
 \end{frame}
 
-% ══════════════════════════════════════════════════════════════════════
-\section{Motivation}
-% ══════════════════════════════════════════════════════════════════════
+% ═════════════════════════════════════════════════════════════════════
+\section{Motivación}
+% ═════════════════════════════════════════════════════════════════════
 
-\begin{frame}{Democracy Beyond the Ballot Box}
-  \begin{columns}[T]
-    \column{0.52\textwidth}
-      \textbf{Participatory Budgeting}\\
-      \textit{(Presupuesto Participativo)}
-      \begin{itemize}
-        \item Citizens vote on \emph{how} to spend part of the public budget
-        \item Born: Porto Alegre, Brazil (1989)
-        \item Now in 11\,000+ cities worldwide
-        \item Mexico: adopted by many municipalities under \textit{Leyes de Participación Ciudadana}
-      \end{itemize}
-    \column{0.45\textwidth}
-      \textbf{Why does it matter?}
-      \begin{itemize}
-        \item Citizens gain a direct say in fiscal decisions
-        \item Aligns government incentives with community needs
-        \item Good allocation $\to$ political goodwill $\to$ accountability
-      \end{itemize}
-      \bigskip
-      \begin{alertblock}{}
-        \centering\small
-        \textbf{Key insight:} The outcomes depend critically on the \emph{voting rules}.
-      \end{alertblock}
-  \end{columns}
-\end{frame}
+\begin{frame}{Qué hace un presupuesto participativo}
+  Se abre una parte del gasto público a la decisión directa de los habitantes:
+  se proponen proyectos, se vota, y los más votados se ejecutan hasta agotar la
+  bolsa.
 
-\begin{frame}{Durango's \textit{Presupuesto Participativo}: The Current Rules}
-  \begin{block}{The District-Exclusivity Rule (\textit{Regla de Exclusividad Distrital})}
-    Each voter must select \textbf{one district} (\textit{sector}) and allocate \textbf{all} votes within it.
-    Voting across district boundaries is \textbf{prohibited}.
+  \begin{block}{Además de repartir dinero, produce información}
+    El ejercicio es un \alert{instrumento de medición}: dice qué valora la gente
+    y dónde. Esa información no está disponible por otra vía a ese nivel de
+    detalle.
   \end{block}
-  \medskip
-  \begin{columns}[T]
-    \column{0.48\textwidth}
-      \textbf{Mechanism in practice:}
-      \begin{itemize}
-        \item $n$ voters, each with $\votes = 6$ votes
-        \item $m$ districts in Durango
-        \item Projects registered within each district
-        \item Top vote-getters funded greedily until budget exhausted
-      \end{itemize}
-    \column{0.48\textwidth}
-      \textbf{Stated justification:}
-      \begin{itemize}
-        \item Prevent high-visibility city-center projects from absorbing all votes
-        \item Protect marginalized \textit{colonias} from being shut out
-        \item Ensure geographic representation
-      \end{itemize}
-  \end{columns}
+
+  La calidad de esa medición depende de una decisión técnica que se toma al
+  principio y casi nunca se revisa: \textbf{cómo se cuentan los votos.}
 \end{frame}
 
-\begin{frame}{The Central Question}
-  \begin{center}
-    \Large
-    Does the district-exclusivity rule achieve its goals?\\[0.8em]
-    \normalsize
-    And if not --- what should we use instead?
-  \end{center}
-  \bigskip
-  \textbf{This paper:}
+\begin{frame}{Lo que está en juego}
+  Si el resultado \textbf{refleja bien} el sentir de la ciudadanía, el gobierno
+  gana dos cosas: obra que responde a necesidades reales, y un respaldo
+  verificable de por qué se eligió cada una.
+
+  \vspace{0.4em}
+  Si \textbf{no} lo refleja, se pagan dos costos a la vez:
+
+  \begin{itemize}
+    \item[\textcolor{warndark}{$\rightarrow$}]
+      \textbf{Se invierte a ciegas.} La señal que llega es ruidosa; se decide
+      sobre una lectura equivocada de la demanda.
+    \item[\textcolor{warndark}{$\rightarrow$}]
+      \textbf{Se abre espacio a la suspicacia.} Si un proyecto que la gente
+      claramente quería no aparece entre los ganadores, el resultado se vuelve
+      difícil de explicar --- aunque el conteo haya sido impecable.
+  \end{itemize}
+
+  \vspace{0.5em}
+  \centering\alert{\textbf{Ambas cosas pueden originarse en la regla de conteo.}}
+\end{frame}
+
+\begin{frame}{La regla de conteo no es neutral}
+  \keybox{Con \textbf{las mismas boletas}, dos reglas de conteo distintas
+    financian \textbf{proyectos distintos}.}
+
+  \vspace{0.5em}
+  No se trata de contar bien o mal. Toda regla incorpora, implícitamente, una
+  definición de qué es un resultado justo:
+
+  \begin{itemize}
+    \item cuánto pesa un grupo grande frente a varios chicos;
+    \item cuánto pesa un proyecto caro frente a varios baratos;
+    \item qué grupos pueden juntar fuerzas y cuáles no.
+  \end{itemize}
+
+  \vspace{0.4em}
+  Esas definiciones se pueden hacer explícitas y evaluar \citep{peters2021}.
+\end{frame}
+
+\begin{frame}{Un esquema frecuente: la restricción distrital}
   \begin{enumerate}
-    \item Formally identifies \textbf{five distortions} caused by the current rule
-    \item Shows that simply removing the constraint \textbf{destroys equity}
-    \item Proposes the \textbf{Method of Equal Shares} (\textit{Método de Partes Iguales}) as a reform
-    \item Characterizes when and why MES achieves both efficiency \emph{and} equity
+    \item El municipio se divide en distritos $\Dist$.
+    \item Cada proyecto pertenece a un distrito.
+    \item Cada votante \textbf{elige un distrito} y reparte ahí la totalidad de
+      sus votos.
+    \item Se ordenan los proyectos por votos y se financian de arriba hacia
+      abajo hasta agotar la bolsa.
   \end{enumerate}
+
+  \vspace{0.5em}
+  \begin{block}{Por qué se hace así}
+    La restricción no es arbitraria: protege a los distritos menos poblados de
+    quedar fuera. Vale la pena ver de qué exactamente los protege --- y qué
+    cuesta esa protección.
+  \end{block}
 \end{frame}
 
-% ══════════════════════════════════════════════════════════════════════
-\section{A Brief Framework: Mechanism Design}
-% ══════════════════════════════════════════════════════════════════════
+% ═════════════════════════════════════════════════════════════════════
+\section{Qué resultados puede producir la regla}
+% ═════════════════════════════════════════════════════════════════════
 
-\begin{frame}{What Is Mechanism Design?}
-  \begin{quote}
-    ``Engineering the rules of the game so that self-interested agents produce good social outcomes.''
-  \end{quote}
-  \bigskip
+\begin{frame}{Circleville: una ciudad de ejemplo}
   \begin{columns}[T]
-    \column{0.32\textwidth}
-      \centering\textbf{(1) Environment}\\[0.4em]
-      Who are the players?\\
-      What do they want?\\
-      What are the constraints?
-    \column{0.32\textwidth}
-      \centering\textbf{(2) Social Choice Function}\\[0.4em]
-      What outcome \emph{should} we produce given everyone's preferences?
-    \column{0.32\textwidth}
-      \centering\textbf{(3) Mechanism}\\[0.4em]
-      What \emph{rules} (message space + outcome function) produce that outcome?
-  \end{columns}
-  \bigskip
-  \begin{alertblock}{The design problem}
-    Preferences are \emph{private}. How do we design rules so that agents reveal them truthfully?
-  \end{alertblock}
-\end{frame}
+    \begin{column}{0.56\textwidth}
+      \centering
+      \includegraphics[page=2, trim=158 489 158 42, clip, width=\textwidth]%
+        {../references/2008.13276v2.pdf}
 
-\begin{frame}{Key Definitions}
-  \begin{block}{Environment $\langle \agents, \outcomes, \typespace, u \rangle$}
-    $n$ agents with private types $\theta_i \in \typespace_i$ (preferences + information);
-    utility functions $u_i : \outcomes \times \typespace_i \to \mathbb{R}$.
-  \end{block}
-  \begin{block}{Social Choice Function $f : \typespace \to \outcomes$}
-    The planner's ideal rule: maps type profiles to outcomes.
-    \emph{Example:} fund the set of projects with highest total welfare.
-  \end{block}
-  \begin{block}{Mechanism $(\mathcal{M}, g)$}
-    $\mathcal{M} = \prod_i M_i$ is the \textbf{message space} (what agents report);
-    $g : \mathcal{M} \to \outcomes$ is the \textbf{outcome function} (how messages map to results).
-  \end{block}
-\end{frame}
-
-\begin{frame}{The Revelation Principle}
-  \begin{theorem}[Revelation Principle]
-    If a social choice function $f$ can be \emph{implemented} by \emph{any} mechanism in Nash equilibrium,
-    it can also be implemented by a \textbf{direct, incentive-compatible} mechanism ---
-    one where truthful reporting is a dominant strategy.
-  \end{theorem}
-  \bigskip
-  \textbf{Implication for us:}
-  We only need to study \emph{direct} mechanisms (voters report preferences directly).
-  Restricting to truthful reporting is without loss of generality.
-\end{frame}
-
-\begin{frame}[shrink=15]{The Gibbard-Satterthwaite Impossibility}
-  \begin{theorem}[Gibbard 1973; Satterthwaite 1975]
-    With three or more alternatives and \emph{unrestricted} preferences, any
-    \textbf{strategy-proof} social choice function that can select any alternative
-    must be \textbf{dictatorial}.
-  \end{theorem}
-  \bigskip
-  \begin{itemize}
-    \item No non-dictatorial mechanism is fully strategy-proof in a general setting
-    \item The \textbf{goal shifts}: design mechanisms that are \emph{as good as possible} under this constraint
-    \item We will revisit this when we evaluate the Method of Equal Shares
-  \end{itemize}
-  \medskip
-  \begin{alertblock}{}
-    Both Durango's current rule \emph{and} the proposed alternative fail strategy-proofness.\\
-    The difference lies in everything else.
-  \end{alertblock}
-\end{frame}
-
-% ══════════════════════════════════════════════════════════════════════
-\section{The Model}
-% ══════════════════════════════════════════════════════════════════════
-
-\begin{frame}[shrink=10]{The Participatory Budgeting Environment}
-  \begin{block}{Definition: PB Environment $\langle \agents, \D, \Pset, \budget, \votes, \util, \info \rangle$}
-  \end{block}
-  \begin{columns}[T]
-    \column{0.50\textwidth}
-      \begin{itemize}
-        \item $\agents = \{1,\ldots,n\}$: voters
-        \item $\D = \{1,\ldots,m\}$: districts (\textit{sectores})
-        \item $\Pset = \bigsqcup_{d} \Pset^d$: projects, partitioned by district
-        \item $\cost : \Pset \to \R_{>0}$: cost function
-        \item $\budget > 0$: total budget
+      {\tiny Fuente: \citet{peters2021}, Figura 1.}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{itemize}\small
+        \item Cuatro distritos de tamaño parecido; \textbf{Northside} es el más
+          poblado: 120k de 400k.
+        \item 20 proyectos con costos muy distintos: de \$4k (I) a \$250k (D).
+        \item Bolsa: \textbf{\$400k}, o sea \$1 por habitante.
+        \item Cada quien vota sólo por los proyectos de su propio distrito.
       \end{itemize}
-    \column{0.48\textwidth}
-      \begin{itemize}
-        \item $\votes \in \mathbb{N}$: vote endowment per voter
-        \item $\util_i(p) \geq 0$: voter $i$'s utility for project $p$
-        \item \alert{$\info_i(p) \in \{0,1\}$}: \textbf{information function}\\
-          ``Does voter $i$ know about project $p$?''
-      \end{itemize}
+    \end{column}
   \end{columns}
-  \medskip
-  \begin{exampleblock}{Why $\info_i$?}
-    Voters know their neighborhood's projects --- not the whole city's.
-    This \textbf{rational ignorance} \citep{downs1957} is the root cause of several distortions.
-  \end{exampleblock}
 \end{frame}
 
-\begin{frame}{District Salience \textit{(Visibilidad Distrital)}}
-  \begin{block}{Definition: Salience $\salience_d$}
-    Fraction of voters informed about \emph{at least one} project in district $d$:
-    \[
-      \salience_d = \frac{|\{i \in \agents : \exists\, p \in \Pset^d,\; \info_i(p) = 1\}|}{n}
-    \]
-  \end{block}
-  \bigskip
-  \begin{columns}[T]
-    \column{0.48\textwidth}
-      \textbf{High-salience} $(\salience_d \approx 1)$:\\
-      City center, university district.\\
-      Most voters know the projects.
-    \column{0.48\textwidth}
-      \textbf{Low-salience} $(\salience_d \approx 0)$:\\
-      Peripheral, marginalized \textit{colonias}.\\
-      Few voters know the projects.
-  \end{columns}
-  \bigskip
-  Salience drives both \textbf{strategic behavior} (who goes where) and \textbf{equity outcomes} (who gets funded).
-\end{frame}
+\begin{frame}{Sin restricción: el distrito más grande se lleva todo}
+  Con la regla simple de ``los más votados ganan'':
 
-\begin{frame}[shrink=10]{Two Mechanisms: DEM and UAM}
-  \begin{columns}[T]
-    \column{0.48\textwidth}
-      \begin{block}{\cDEM{District-Exclusivity Mechanism (DEM)}}
-        \begin{itemize}
-          \item Voter selects \textbf{one district} $d_i \in \D$
-          \item Allocates all $\votes$ votes \emph{within} $\Pset^{d_i}$
-          \item \textbf{Durango's current rule}
-        \end{itemize}
-      \end{block}
-    \column{0.48\textwidth}
-      \begin{block}{\cUAM{Unrestricted Allocation Mechanism (UAM)}}
-        \begin{itemize}
-          \item Allocates $\votes$ votes across \textbf{any} project in \textbf{any} district
-          \item No geographic constraint
-          \item The ``obvious'' alternative
-        \end{itemize}
-      \end{block}
-  \end{columns}
-  \bigskip
-  Both mechanisms use the same \textbf{greedy outcome rule}: fund projects in decreasing vote order until the budget is exhausted.
-  \[
-    \mathcal{M}^{\cDEM{\DEM}} \;\subsetneq\; \mathcal{M}^{\cUAM{\UAM}}
-  \]
-  Every DEM vote profile is a valid UAM profile.
-  The DEM simply \emph{restricts} the feasible space.
-\end{frame}
-
-% ══════════════════════════════════════════════════════════════════════
-\section{Five Distortions of the Current Mechanism}
-% ══════════════════════════════════════════════════════════════════════
-
-\begin{frame}[shrink=15]{Distortion 1: Preference Truncation \textit{(Truncamiento de Preferencias)}}
-  \begin{block}{Proposition}
-    Under sincere voting \emph{with full information}, utilitarian social welfare satisfies
-    \(W^{\cDEM{\DEM}} \leq W^{\cUAM{\UAM}}\),
-    with strict inequality whenever the marginal voter has cross-district preferences.\\[2pt]
-    \footnotesize\emph{(With incomplete information the ranking can reverse --- this is exactly Distortion 5.)}
-  \end{block}
-  \medskip
-  \textbf{Intuition:}
   \begin{itemize}
-    \item A voter who cares about projects in \emph{two} districts must abandon half their preferences
-    \item All 6 votes are forced into one district --- even if the voter's top priority lies elsewhere
-    \item The DEM \emph{artificially narrows} each voter's expressed preference profile
-    \item Since $\mathcal{M}^{\DEM} \subsetneq \mathcal{M}^{\UAM}$, the DEM truncates the preferences each voter can express
+    \item Los 120k de Northside votan por A, B, C y D. Nadie más vota por esos
+      proyectos.
+    \item Como Northside es el más poblado, \textbf{sus proyectos encabezan la
+      lista}.
+    \item Se financian C (\$150k) y D (\$250k): exactamente los \$400k.
   \end{itemize}
-\end{frame}
 
-\begin{frame}[shrink=10]{Distortion 2: Noise Injection \textit{(Inyección de Ruido)}}
-  \begin{block}{Noise Allocation Model}
-    A voter selecting district $d$ must allocate \emph{all} $\votes$ votes within $\Pset^d$.
-    Votes on projects the voter doesn't know become \textbf{noise}: random allocation unrelated to quality.
-  \end{block}
-  \begin{block}{Proposition}
-    For any project $p \in \Pset^d$:
-    \[
-      \E[\vtotal(p)] \;=\; \underbrace{S(p)}_{\text{signal: votes from informed voters}} + \underbrace{\E[\eta(p)]}_{\text{noise: votes from uninformed voters}}
-    \]
-    $\E[\eta(p)]$ is \textbf{independent of $\util_j(p)$} for all voters $j$.
-    The noise-to-signal ratio rises with the number of unknown projects.
-  \end{block}
-\end{frame}
-
-\begin{frame}[shrink=15]{Noise in Action: Durango-Scale Example}
-  \textbf{Setup:} District $A$, 8 projects, 100 voters, $\votes = 6$
-  \begin{itemize}
-    \item \textbf{40 institutional voters}: know only $p_1$ (flagship project)
-    \item \textbf{30 local residents}: know 3 projects including $p_1$
-    \item \textbf{30 mobilized supporters}: each knows one other project (not $p_1$)
-  \end{itemize}
-  \medskip
-  \begin{columns}
-    \column{0.48\textwidth}
-      \textbf{Dominant project $p_1$:}\\[0.3em]
-      Signal\quad $S(p_1) \approx 220$\\
-      Noise\quad $\E[\eta(p_1)] \approx 4.3$\\[0.3em]
-      \textcolor{mesdark}{Noise/Signal $\approx \mathbf{2\%}$\quad\cmark}
-    \column{0.48\textwidth}
-      \textbf{Small valued project $p_7$:}\\[0.3em]
-      Signal\quad $S(p_7) = 10$\\
-      Noise\quad $\E[\eta(p_7)] \approx 15.7$\\[0.3em]
-      \alert{Noise/Signal $\approx \mathbf{157\%}$\quad\xmark}
-  \end{columns}
-  \bigskip
-  \begin{alertblock}{}
-    For marginal projects, noise \emph{exceeds} the signal.
-    Funding at the margin is driven by random allocation, not genuine preferences.
+  \vspace{0.4em}
+  \begin{alertblock}{Resultado}
+    Los \textbf{280 mil habitantes} de los otros tres distritos se quedan sin
+    nada, con una regla que a nadie le pareció injusta de antemano.
   \end{alertblock}
+
+  \vspace{0.2em}
+  {\small No hace falta una mayoría: basta ser \emph{la minoría más grande}.}
 \end{frame}
 
-\begin{frame}[shrink=15]{Distortion 3: The Coordination Game \textit{(Juego de Coordinación)}}
-  \begin{block}{District-Selection Game $\Gamma$}
-    Voters with positive utility in multiple districts face a strategic choice: which district to select?
-    Payoffs depend on others' choices --- creating \textbf{strategic complementarity}.
+\begin{frame}{La respuesta natural, y la que se usa}
+  \begin{block}{Elecciones separadas por distrito}
+    Se reparte la bolsa entre los distritos de antemano ---por ejemplo, en
+    proporción a su población--- cada proyecto se asigna a un distrito, y cada
+    quien vota sólo en el suyo.
   \end{block}
-  \begin{block}{Proposition}
-    If enough voters have cross-district preferences, $\Gamma$ has \textbf{at least two Nash equilibria}
-    producing \textbf{distinct funded sets} with \textbf{distinct welfare levels}.
-  \end{block}
-  \medskip
-  \textbf{Example:} Districts $A$ and $B$ each have one borderline project; 50 mobile voters can tip either.
-  \begin{itemize}
-    \item $E_A$: all mobile voters $\to A$ \;---\; $p_A$ funded, $p_B$ not
-    \item $E_B$: all mobile voters $\to B$ \;---\; $p_B$ funded, $p_A$ not
-  \end{itemize}
-  \alert{Which project gets funded depends on \emph{who shouts louder}, not on what the community values.}
+
+  \vspace{0.6em}
+  Funciona para lo que fue diseñada: ya no es posible que un solo distrito se
+  lleve el presupuesto completo.
+
+  \vspace{0.6em}
+  El punto que interesa aquí es que esa solución \textbf{no es gratuita}.
 \end{frame}
 
-\begin{frame}[shrink=15]{Distortion 4: Mobilization Advantage \textit{(Ventaja por Movilización)}}
-  \begin{block}{Proposition}
-    A mobilizing institution $(\mathcal{C}, p_\mathcal{C})$ coordinating $|\mathcal{C}|$ voters:
-    \begin{enumerate}[\upshape(i)]
-      \item Inflates district $d_\mathcal{C}$'s vote pool by $|\mathcal{C}| \cdot \votes$
-      \item Creates vote displacement $\Delta_\mathcal{C} = \votes \cdot |\mathcal{C}^*|$
-        ($\mathcal{C}^*$: members diverted from their preferred district)
-      \item Causes private utility loss to diverted members, $\mathcal{L}(\mathcal{C}) \geq 0$
-    \end{enumerate}
-  \end{block}
-  \medskip
-  \textbf{Example:} A university coordinates 400 employees $\to$ the district with the university park project.
-  \begin{itemize}
-    \item $\Delta_\mathcal{C} = 400 \times 6 = 2{,}400$ displaced votes
-    \item Those 400 voters can no longer support the projects they actually value most
-    \item The outcome reflects institutional power, not community preferences
-  \end{itemize}
+\begin{frame}{Lo que cuesta anclar el voto al distrito}
+  \begin{columns}[T]
+    \begin{column}{0.40\textwidth}
+      \centering
+      \includegraphics[page=2, trim=158 489 158 42, clip, width=\textwidth]%
+        {../references/2008.13276v2.pdf}
+
+      {\tiny \citet{peters2021}, p. 2.}
+    \end{column}
+    \begin{column}{0.60\textwidth}
+      \begin{itemize}\small
+        \item \textbf{Proyectos en la frontera.} A y P están sobre el límite
+          entre dos distritos. Los vecinos del otro lado los quieren, pero no
+          pueden votarlos: quedan subvalorados.
+        \item \textbf{Proyectos de ciudad.} Lo que beneficia a todo el municipio
+          no encaja en ningún distrito.
+        \item \textbf{Grupos que no son geográficos.} Los papás de toda la
+          ciudad podrían querer el parque infantil (C), pero repartidos en
+          cuatro elecciones nunca forman bloque. Igual los ciclistas con la
+          ciclovía del río (R, S, H, G).
+      \end{itemize}
+    \end{column}
+  \end{columns}
 \end{frame}
 
-\begin{frame}[shrink=10]{Distortion 5: The Equity Tradeoff \textit{(Dilema de Equidad)}}
-  \begin{block}{Proposition}
+\begin{frame}{Los dos costos, en los términos que importan}
+  \begin{block}{Ruido en la señal}
+    Si el votante debe repartir \emph{todos} sus votos dentro de un distrito
+    pero sólo le importa un proyecto, los votos restantes tienen que ir a algún
+    lado. Entran al conteo, pero no expresan una valoración. \\[0.3em]
+    El número de votos deja de ser una medida limpia de cuánto se valora un
+    proyecto.
+  \end{block}
+
+  \begin{block}{Equidad comprada con una restricción}
+    La protección territorial se obtiene \emph{prohibiendo} expresar
+    preferencias, no midiéndolas mejor.
+  \end{block}
+
+  \centering\textbf{¿Se puede tener la protección sin la restricción?}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════
+\section{Cómo se plantea el problema}
+% ═════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Una elección, como objeto}
+  \begin{definition}[Elección]
+    Una \emph{elección} es una tupla
+    $E=(\voters,\projects,\budget,\cost,\{\util_i\}_{i\in \voters})$:
     \begin{itemize}
-      \item \cUAM{\textbf{UAM}}: High-salience districts capture nearly all votes.
-        Marginalized, low-salience districts may get \emph{zero funding} ($\beta$-equity fails with $\beta = 0$).
-      \item \cDEM{\textbf{DEM}}: Committed local residents create a \emph{protected vote pool},
-        giving marginalized districts partial protection ($\beta > 0$).
+      \item $\voters=\{1,\dots,n\}$, los \textbf{votantes};
+      \item $\projects=\{c_1,\dots,c_m\}$, los \textbf{proyectos};
+      \item $\budget$, el \textbf{presupuesto}; \quad $\cost(c)$, el
+        \textbf{costo} de $c$;
+      \item $\util_i(c)$, cuánto \textbf{vale} el proyecto $c$ para el votante $i$.
+    \end{itemize}
+  \end{definition}
+
+  \vspace{0.3em}
+  $W\subseteq\projects$ es \emph{factible} si $\cost(W)\leq\budget$. Una
+  \textbf{regla} asigna a cada elección un conjunto factible de ganadores.
+
+  \vspace{0.3em}
+  {\small En el caso más simple $\util_i(c)\in\{0,1\}$: el votante aprueba el
+  proyecto o no. Es el que veremos.}
+\end{frame}
+
+\begin{frame}{Qué le vamos a exigir a la regla}
+  \begin{block}{Proporcionalidad}
+    Un grupo de votantes $S$ que es una fracción $|S|/n$ de la población debería
+    decidir sobre una fracción $|S|/n$ del presupuesto.
+  \end{block}
+
+  \vspace{0.5em}
+  Dos cosas hacen esto potente:
+
+  \begin{itemize}
+    \item El grupo $S$ \textbf{no tiene que ser un distrito}: puede ser los
+      papás, los ciclistas, o cualquier conjunto que comparta un interés.
+    \item El grupo \textbf{no se declara}: la regla lo detecta sola a partir de
+      cómo votó la gente.
+  \end{itemize}
+
+  \vspace{0.4em}
+  Si la regla es proporcional en este sentido, la protección territorial sale
+  como \textbf{caso particular}, sin prohibir nada.
+\end{frame}
+
+\begin{frame}{Cómo se formaliza: EJR}
+  \begin{definition}[Grupo cohesivo]
+    $S$ es \emph{$T$-cohesivo} para $T\subseteq\projects$ si
+    \[
+      \underbrace{\frac{|S|}{n}\;\geq\;\frac{\cost(T)}{\budget}}_{T\ \text{cabe en la parte que le toca a } S}
+      \qquad\text{y}\qquad
+      \underbrace{T\subseteq\textstyle\bigcap_{i\in S}A(i)}_{\text{todos en } S \text{ aprueban todo } T}
+    \]
+  \end{definition}
+
+  \begin{definition}[Representación justificada extendida, \EJR]
+    Una regla satisface \EJR{} si para todo grupo $T$-cohesivo $S$ hay al menos
+    un votante $i\in S$ que obtiene al menos $|T|$ proyectos aprobados entre los
+    ganadores.
+  \end{definition}
+
+  {\small \alert{Ningún grupo con un interés común y con derecho a financiarlo
+  queda desatendido.} \citep{aziz2017, peters2021}}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════
+\section{El Método de Partes Iguales}
+% ═════════════════════════════════════════════════════════════════════
+
+\begin{frame}{La idea, en una frase}
+  \keybox{A cada votante se le entrega \textbf{su parte igual del
+    presupuesto}, $\budget/n$, en una cuenta virtual. Un proyecto se financia
+    cuando \textbf{quienes lo apoyan pueden pagarlo} entre ellos.}
+
+  \begin{itemize}
+    \item La bolsa no se reparte por distrito, sino \textbf{por persona}.
+    \item El costo de cada proyecto se divide lo más parejo posible entre
+      quienes lo apoyaron.
+    \item El votante aprueba \textbf{sólo los proyectos que conoce y quiere},
+      estén donde estén: no hay votos sobrantes que repartir.
+  \end{itemize}
+
+  \vspace{0.3em}
+  {\small \citet{petersskowron2020}; \citet{peters2021}.}
+\end{frame}
+
+\begin{frame}{La definición formal}
+  \begin{definition}[Método de Partes Iguales]
+    Cada votante inicia con $\budget/n$. Si $p_i(c)$ es lo que $i$ paga por $c$,
+    entonces $b_i = \budget/n - \sum_{c\in W} p_i(c)$ es lo que le queda. Dado
+    $\mesrho>0$, el proyecto $c\notin W$ es \alert{$\mesrho$-costeable} si
+    \[
+      \sum_{i\in \voters}\min\bigl(b_i,\;\util_i(c)\cdot\mesrho\bigr)\;=\;\cost(c).
+    \]
+    Se financia el proyecto costeable con el $\mesrho$ \textbf{más bajo}, y cada
+    quien paga $p_i(c)=\min\bigl(b_i,\;\util_i(c)\cdot\mesrho\bigr)$. Termina
+    cuando ningún proyecto es costeable.
+  \end{definition}
+
+  \begin{block}{Qué es $\mesrho$}
+    El \textbf{precio por unidad de valor}. Empezar por el $\mesrho$ más bajo es
+    empezar por lo que más rinde por peso gastado.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Un ejemplo completo}
+  10 votantes, 5 proyectos, presupuesto $\budget=\$100$. Cada votante recibe
+  $\budget/n = \$10$.
+
+  \vspace{0.6em}
+  \centering
+  \small
+  \begin{tabular}{lrcccccccccc}
+    \toprule
+     & costo & $i_1$ & $i_2$ & $i_3$ & $i_4$ & $i_5$ & $i_6$ & $i_7$ & $i_8$ & $i_9$ & $i_{10}$\\
+    \midrule
+    Proyecto 1 & \$36 & 1&1&1&1&1&0&0&0&0&0\\
+    Proyecto 2 & \$36 & 1&1&1&1&1&1&0&0&0&0\\
+    Proyecto 3 & \$25 & 1&1&1&1&1&0&0&0&0&0\\
+    Proyecto 4 & \$24 & 0&0&0&1&1&1&1&0&0&0\\
+    Proyecto 5 & \$24 & 0&0&0&0&0&1&1&1&1&0\\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.6em}
+  \raggedright
+  {\small Un 1 significa que el votante aprueba ese proyecto. Nótese que
+  $i_{10}$ no aprobó nada, y que los apoyos \textbf{se traslapan}: $i_4$, $i_5$
+  e $i_6$ están en más de un grupo. \hfill {\tiny \citet{peters2021}, pp. 7--8.}}
+\end{frame}
+
+\begin{frame}{Ronda 1: ¿cuánto tendría que pagar cada quien?}
+  \centering
+  \begin{tikzpicture}[scale=0.80, every node/.style={transform shape}]
+    % Proyecto 1
+    \begin{scope}[shift={(0,5.2)}]
+      \vbar{0}{i_1}{10}{7.2} \vbar{1}{i_2}{10}{7.2} \vbar{2}{i_3}{10}{7.2}
+      \vbar{3}{i_4}{10}{7.2} \vbar{4}{i_5}{10}{7.2}
+      \vbaro{5}{i_6}{10} \vbaro{6}{i_7}{10} \vbaro{7}{i_8}{10}
+      \vbaro{8}{i_9}{10} \vbaro{9}{i_{10}}{10}
+      \node[anchor=west, font=\small] at (6.9,0.8)
+        {Proyecto 1 \;(\$36)\quad $\mesrho = 7.2$};
+    \end{scope}
+    % Proyecto 2
+    \begin{scope}[shift={(0,2.6)}]
+      \vbar{0}{i_1}{10}{6} \vbar{1}{i_2}{10}{6} \vbar{2}{i_3}{10}{6}
+      \vbar{3}{i_4}{10}{6} \vbar{4}{i_5}{10}{6} \vbar{5}{i_6}{10}{6}
+      \vbaro{6}{i_7}{10} \vbaro{7}{i_8}{10} \vbaro{8}{i_9}{10} \vbaro{9}{i_{10}}{10}
+      \node[anchor=west, font=\small] at (6.9,0.8)
+        {Proyecto 2 \;(\$36)\quad $\mesrho = 6$};
+    \end{scope}
+    % Proyecto 3
+    \begin{scope}[shift={(0,0)}]
+      \vbar{0}{i_1}{10}{5} \vbar{1}{i_2}{10}{5} \vbar{2}{i_3}{10}{5}
+      \vbar{3}{i_4}{10}{5} \vbar{4}{i_5}{10}{5}
+      \vbaro{5}{i_6}{10} \vbaro{6}{i_7}{10} \vbaro{7}{i_8}{10}
+      \vbaro{8}{i_9}{10} \vbaro{9}{i_{10}}{10}
+      \node[anchor=west, font=\small, mesdark] at (6.9,0.8)
+        {\textbf{Proyecto 3} \;(\$25)\quad $\mesrho = 5$};
+    \end{scope}
+  \end{tikzpicture}
+
+  \vspace{0.2em}
+  \raggedright
+  {\small Los proyectos 4 y 5 dan ambos $\mesrho=6$: \$24 repartidos entre 4
+  apoyos.}
+\end{frame}
+
+\begin{frame}{Ronda 1: se financia el Proyecto 3}
+  Es el del $\mesrho$ más bajo. Sus cinco apoyadores pagan \$5 cada uno.
+
+  \vspace{0.8em}
+  \centering
+  \begin{tikzpicture}[scale=0.92, every node/.style={transform shape}]
+    \vbaro{0}{i_1}{5} \vbaro{1}{i_2}{5} \vbaro{2}{i_3}{5}
+    \vbaro{3}{i_4}{5} \vbaro{4}{i_5}{5}
+    \vbaro{5}{i_6}{10} \vbaro{6}{i_7}{10} \vbaro{7}{i_8}{10}
+    \vbaro{8}{i_9}{10} \vbaro{9}{i_{10}}{10}
+    \node[anchor=west, font=\small] at (6.9,0.8) {Saldos tras la ronda 1};
+  \end{tikzpicture}
+
+  \vspace{0.9em}
+  \raggedright
+  \begin{itemize}\small
+    \item Los proyectos 1 y 2 (\$36) \textbf{ya no son costeables}: a los
+      apoyadores del 1 les quedan \$25 en total; a los del 2, \$35.
+    \item Los proyectos 4 y 5 siguen vivos.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Ronda 2: dos proyectos idénticos, distinto resultado}
+  \centering
+  \begin{tikzpicture}[scale=0.86, every node/.style={transform shape}]
+    \begin{scope}[shift={(0,2.9)}]
+      \vbaro{0}{i_1}{5} \vbaro{1}{i_2}{5} \vbaro{2}{i_3}{5}
+      \vbar{3}{i_4}{5}{5} \vbar{4}{i_5}{5}{5}
+      \vbar{5}{i_6}{10}{7} \vbar{6}{i_7}{10}{7}
+      \vbaro{7}{i_8}{10} \vbaro{8}{i_9}{10} \vbaro{9}{i_{10}}{10}
+      \node[anchor=west, font=\small] at (6.9,0.8)
+        {Proyecto 4 \;(\$24)\quad $\mesrho = 7$};
+    \end{scope}
+    \begin{scope}[shift={(0,0)}]
+      \vbaro{0}{i_1}{5} \vbaro{1}{i_2}{5} \vbaro{2}{i_3}{5}
+      \vbaro{3}{i_4}{5} \vbaro{4}{i_5}{5}
+      \vbar{5}{i_6}{10}{6} \vbar{6}{i_7}{10}{6}
+      \vbar{7}{i_8}{10}{6} \vbar{8}{i_9}{10}{6} \vbaro{9}{i_{10}}{10}
+      \node[anchor=west, font=\small, mesdark] at (6.9,0.8)
+        {\textbf{Proyecto 5} \;(\$24)\quad $\mesrho = 6$};
+    \end{scope}
+  \end{tikzpicture}
+
+  \vspace{0.3em}
+  \raggedright
+  {\small Mismo costo y mismo número de apoyos --- pero a los apoyadores del
+  Proyecto 4 ya se les gastó parte de su dinero. Se financia el
+  \textbf{Proyecto 5}: $i_6$ a $i_9$ pagan \$6 cada uno.}
+\end{frame}
+
+\begin{frame}{Resultado, y los tres principios}
+  \begin{columns}[T]
+    \begin{column}{0.42\textwidth}
+      \begin{block}{Resultado}
+        $W = \{$Proyecto 3, Proyecto 5$\}$ \\[0.3em]
+        Ya nada es costeable: a los apoyadores del Proyecto 4 sólo les quedan
+        \$18 de los \$24 que cuesta.
+      \end{block}
+      {\small Se gastaron \$49 de \$100. \alert{Sobra presupuesto} --- volvemos
+      a esto.}
+    \end{column}
+    \begin{column}{0.58\textwidth}
+      \begin{itemize}\small
+        \item[\textcolor{mesdark}{\textbf{1.}}] \textbf{Más apoyos, mejor.}
+          El Proyecto 2 cuesta lo mismo que el 1 pero lo apoya más gente.
+        \item[\textcolor{mesdark}{\textbf{2.}}] \textbf{Más barato, mejor.}
+          El Proyecto 3 tiene los mismos apoyos que el 1 y cuesta menos.
+        \item[\textcolor{mesdark}{\textbf{3.}}] \textbf{Apoyos con más saldo,
+          mejor.} Entre proyectos iguales gana aquel cuyos apoyadores aún no
+          han visto atendidas sus preferencias.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.4em}
+  \centering
+  {\small El principio 3 hace el trabajo de equidad: quien ya ganó, gasta; quien
+  no, conserva su capacidad de decidir.}
+\end{frame}
+
+\begin{frame}{El algoritmo}
+  \vspace{-0.4em}
+  \scriptsize
+  \begin{algorithmic}[1]
+    \State $W \gets \emptyset$;\quad para cada votante $i$: $b[i] \gets \budget/|\voters|$
+    \While{verdadero}
+      \For{$c \in \projects \setminus W$}
+        \If{$\sum_{i:\, \util_i(c)>0} b[i] < \cost(c)$}
+          \State $\mesrho(c) \gets \infty$ \Comment{$c$ no es costeable}
+        \Else
+          \State ordenar los apoyadores $i_1,\dots,i_t$ de $c$ tal que
+                 $b[i_1]/\util_{i_1}(c) \leq \cdots \leq b[i_t]/\util_{i_t}(c)$
+          \For{$s = 1,\dots,t$}
+            \State $\mesrho(c) \gets
+                   \bigl(\cost(c) - (b[i_1]+\cdots+b[i_{s-1}])\bigr) \big/
+                   \bigl(\util_{i_s}(c)+\cdots+\util_{i_t}(c)\bigr)$
+            \If{$\mesrho(c)\cdot \util_{i_s}(c) \leq b[i_s]$} \State \textbf{break} \EndIf
+          \EndFor
+        \EndIf
+      \EndFor
+      \If{$\min_{c} \mesrho(c) = \infty$} \State \Return $W$ \EndIf
+      \State $c \gets \arg\min_{c \in \projects\setminus W} \mesrho(c)$;\quad
+             $W \gets W \cup \{c\}$
+      \State para cada $i$ con $\util_i(c)>0$:\;
+             $b[i] \gets b[i] - \min\{b[i],\, \mesrho(c)\cdot \util_i(c)\}$
+    \EndWhile
+  \end{algorithmic}
+
+  \vspace{0.3em}
+  {\scriptsize Corre en tiempo polinomial, $O(m^2 n\log n)$, y es auditable paso
+  por paso: cada peso queda asignado a un votante y a un proyecto.
+  \hfill {\tiny \citet{peters2021}, Alg. 1.}}
+\end{frame}
+
+\begin{frame}{La garantía}
+  \begin{theorem}[\citealp{peters2021}, Teorema 2]
+    El Método de Partes Iguales satisface \EJR{} cuando los votantes aprueban o
+    no aprueban proyectos, con costos arbitrarios.
+  \end{theorem}
+
+  \vspace{0.4em}
+  \centering
+  \small
+  \begin{tabular}{lcc}
+    \toprule
+    & aprobación & valoraciones generales \\
+    \midrule
+    costos iguales     & \EJR & \EJR{} salvo un proyecto \\
+    costos arbitrarios & \EJR & \EJR{} salvo un proyecto \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.6em}
+  \raggedright
+  \begin{block}{Qué significa en la práctica}
+    Un distrito que es el 20\% del municipio y que se pone de acuerdo en qué
+    quiere obtiene representación acorde a ese 20\% \textbf{sin que nadie tenga
+    que reservarle una bolsa}. Lo mismo para cualquier otro grupo que comparta
+    un interés, sea territorial o no.
+  \end{block}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════
+\section{Cierre}
+% ═════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Limitaciones, dichas de frente}
+  \begin{itemize}
+    \item \textbf{Sobra presupuesto.} El método se detiene cuando nadie puede
+      pagar, no cuando se acaba el dinero. Hay procedimientos para asignar el
+      remanente, y hay que elegir uno explícitamente.
+    \item \textbf{No es a prueba de estrategia.} En principio alguien puede
+      beneficiarse votando distinto a lo que piensa. No es una falla del método:
+      es un resultado de imposibilidad general \citep{peters2018}.
+    \item \textbf{La boleta cambia.} Se aprueban los proyectos que se quieran,
+      en cualquier parte de la ciudad. Es más simple de contestar, pero hay que
+      explicar bien el conteo.
+    \item \textbf{El resultado es más difícil de narrar.} ``Ganaron los más
+      votados'' se explica en una frase; esto requiere mostrar el proceso ---
+      que, a cambio, es completamente auditable.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Qué implicaría probarlo}
+  \begin{block}{Implementación}
+    \begin{itemize}\small
+      \item El cambio es \textbf{en el conteo}, no en la logística: mismas
+        casillas, misma difusión, misma convocatoria.
+      \item La boleta se simplifica: aprobar los proyectos que se quieran, sin
+        elegir distrito ni repartir un número fijo de votos.
+      \item El cálculo es inmediato y reproducible con los datos publicados.
     \end{itemize}
   \end{block}
-  \medskip
-  \begin{alertblock}{The core dilemma}
-    The DEM's district constraint is a \textbf{blunt} equity instrument.\\
-    It partially protects marginalized districts --- but at the cost of distortions 1--4.\\[0.5em]
-    \textbf{Simply removing the constraint (UAM) makes equity \emph{worse.}}\\[0.5em]
-    We need a mechanism that achieves equity \emph{by design}, not by restriction.
-  \end{alertblock}
-\end{frame}
 
-% ══════════════════════════════════════════════════════════════════════
-\section{The Method of Equal Shares}
-% ══════════════════════════════════════════════════════════════════════
-
-\begin{frame}[shrink=15]{The Core Idea: Individual Budget Shares}
-  \begin{center}
-    \Large
-    Each voter receives an \textbf{equal share} of the budget:\\[0.3em]
-    $\bshare_i = \budget / n$\\[0.5em]
-    \normalsize
-    Projects are funded by \textbf{pooling} the shares of their supporters.
-  \end{center}
-  \medskip
-  \begin{columns}[T]
-    \column{0.48\textwidth}
-      \textbf{What voters do:}
-      \begin{itemize}
-        \item Submit an \textbf{approval ballot} $\Ap \subseteq \Pset$
-        \item Approve any projects they support, \emph{across any district}
-        \item Only approve projects they know: $\info_i(p) = 1$
-      \end{itemize}
-    \column{0.48\textwidth}
-      \textbf{What the algorithm does:}
-      \begin{itemize}
-        \item Finds the project with the \emph{most support relative to cost}
-        \item Deducts from supporters' shares proportionally
-        \item Repeats until no more projects are affordable
-      \end{itemize}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{The MES Algorithm}
-  \begin{block}{Definition: Method of Equal Shares}
-    \textbf{Initialize:} $\bshare_i = \budget/n$ for all $i$;\quad $W = \emptyset$.\\[0.5em]
-    \textbf{Repeat until no project is affordable:}
-    \begin{enumerate}
-      \item For each $p \notin W$, find supporters $\Np = \{i : p \in \Ap,\; \bshare_i > 0\}$
-      \item Compute the \textbf{cost-per-supporter threshold}:
-        \[
-          \mesrho(p) \;=\; \min\!\Bigl\{\mesrho \geq 0 :
-            \textstyle\sum_{i \in \Np} \min(\bshare_i,\, \mesrho) \geq \cost(p)\Bigr\}
-        \]
-      \item \textbf{Fund} $p^* = \argmin_p \mesrho(p)$;\quad deduct $\min(\bshare_i, \mesrho(p^*))$ from each $i \in N(p^*)$
-    \end{enumerate}
-    \textbf{Completion:} Allocate remaining budget greedily by total approval count.
+  \begin{block}{Cómo saber si funcionó}
+    \begin{itemize}\small
+      \item Correr \textbf{ambas reglas sobre las mismas boletas} de un
+        ejercicio ya realizado y comparar los ganadores.
+      \item Medir la distribución del gasto por distrito bajo cada regla.
+      \item Es un ejercicio de gabinete: no requiere volver a votar.
+    \end{itemize}
   \end{block}
 \end{frame}
 
-\begin{frame}{MES Step-by-Step: Example}
-  \textbf{4 voters, $\budget = 100$, $\bshare_i = 25$ each}
-  \begin{center}
-  \small
-  \begin{tabular}{lcccccc}
-    \toprule
-    Project & Cost & District & $i{=}1$ & $i{=}2$ & $i{=}3$ & $i{=}4$ \\
-    \midrule
-    $p_1$: Park renovation   & 40 & Center   & \cmark & \cmark & \cmark & \\
-    $p_2$: School repair     & 30 & Marginal & & & \cmark & \cmark \\
-    $p_3$: Road paving       & 50 & Center   & \cmark & \cmark & & \\
-    $p_4$: Water access      & 20 & Marginal & & & & \cmark \\
-    \bottomrule
-  \end{tabular}
-  \end{center}
-  \medskip
-  \textbf{Round 1} --- thresholds: $\mesrho(p_1)=13.3$, $\mesrho(p_2)=15$,
-    $\mesrho(p_3)=25$, $\mesrho(p_4)=20$.\\
-  \textcolor{mesdark}{$\to$ Fund $p_1$.} Deduct 13.3 from $i=1,2,3$.
-  Remaining: $\bshare_{1,2,3} = 11.67$;\; $\bshare_4 = 25$.
-\end{frame}
-
-\begin{frame}[shrink=15]{MES Step-by-Step: Example (cont.)}
-  After Round 1: $\bshare_1 = \bshare_2 = \bshare_3 = 11.67$;\quad $\bshare_4 = 25$
-
-  \medskip
-  \textbf{Round 2} --- $p_2$: $\mesrho(p_2) = 18.3$;\quad $p_4$: $\mesrho(p_4) = 20$.\\
-  $p_3$: total available $= 2 \times 11.67 = 23.3 < 50$ --- \emph{not affordable}.\\
-  \textcolor{mesdark}{$\to$ Fund $p_2$ (smallest $\mesrho$).} $i=3$ pays 11.67, $i=4$ pays 18.33.
-  Now $\bshare_3 = 0$;\; $\bshare_4 = 6.67$.
-
-  \medskip
-  \textbf{Round 3} --- $p_4$: only $i=4$ left, $\bshare_4 = 6.67 < 20$ --- not affordable.\\
-  $p_3$: not affordable.\quad \textbf{Stop.}
-
-  \medskip
-  \textbf{Completion:} Remaining budget $= 30$.
-  Fund $p_4$ (cost 20) greedily. Final: $W = \{p_1, p_2, p_4\}$.
-
-  \medskip
-  \begin{exampleblock}{}
-    The ``Marginal'' district gets two projects --- without any geographic constraint.\\
-    Budget proportionality did the work that the DEM tried to do by force.
-  \end{exampleblock}
-\end{frame}
-
-\begin{frame}{Extended Justified Representation (EJR)}
-  \begin{block}{Definition: EJR}
-    A funded set $W$ satisfies \textbf{Extended Justified Representation} if:
-    for every cohesive group $S$ of voters whose collective budget share covers their projects,
-    at least one member of $S$ has their proportional share of the budget represented in $W$.
-  \end{block}
-  \begin{theorem}[MES Satisfies EJR \citep{peters2021}]
-    The Method of Equal Shares always produces outcomes satisfying EJR.
-  \end{theorem}
-  \medskip
-  \textbf{What this means for Durango:}
-  Any community of residents who collectively have enough budget share to fund their projects
-  \emph{will} have those interests represented in the outcome --- by construction, not by chance.
-\end{frame}
-
-\begin{frame}[shrink=10]{MES Resolves All Four Distortions}
-  \begin{columns}[T]
-    \column{0.48\textwidth}
-      \begin{exampleblock}{Prop.~6: No Preference Truncation}
-        Ballot space $M_i^{\MES} = 2^{\Pset}$:
-        approve anything, across any district.
-        No cross-district restriction.
-      \end{exampleblock}
-      \begin{exampleblock}{Prop.~7: No Forced Noise}
-        Voters approve only projects they know.
-        No minimum ballot size.
-        Noise votes do not arise.
-      \end{exampleblock}
-    \column{0.48\textwidth}
-      \begin{exampleblock}{Prop.~8: No Coordination Game}
-        No district-selection stage.
-        The strategic complementarity that creates multiple equilibria is absent by design.
-      \end{exampleblock}
-      \begin{exampleblock}{Prop.~9: Bounded Mobilization}
-        Coalition $\mathcal{C}$ can direct at most $|\mathcal{C}| \cdot (\budget/n)$ to any project.
-        Vote displacement $\Delta_\mathcal{C} = 0$.
-      \end{exampleblock}
-  \end{columns}
-\end{frame}
-
-\begin{frame}[shrink=15]{MES and Geographic Equity \textit{(Equidad Geográfica)}}
-  \begin{block}{Proposition (Geographic Equity via EJR)}
-    Let $\bdist_d = n_d/n$ be district $d$'s population share. If the committed residents of district
-    $d$ \emph{commonly approve} a local bundle worth $\bdist_d\budget$, then under MES the funded set
-    $W$ satisfies:
-    \[
-      \sum_{p \in W \cap \Pset^d} \cost(p) \;\geq\; \bdist_d \cdot \budget .
-    \]
-  \end{block}
-  \medskip
-  \begin{itemize}
-    \item Every such district gets \textbf{at least its proportional budget share} --- guaranteed
-    \item This is \textbf{structural} (follows from EJR): holds regardless of what other voters do
-    \item Contrast with DEM: equity depends on committed residents happening to form a large enough bloc
-    \item If local preferences are heterogeneous, the floor is the largest \emph{commonly-approved}
-      bundle --- still $>0$, still beats the UAM's $\beta=0$
-  \end{itemize}
-\end{frame}
-
-\begin{frame}[shrink=15]{An Honest Limitation: MES Is Not Strategy-Proof}
-  \begin{alertblock}{Proposition}
-    MES does not satisfy DSIC: there exist preference profiles where a voter gains
-    by misreporting their ballot.
-  \end{alertblock}
-  \medskip
-  \begin{itemize}
-    \item \textbf{Inherent, not incidental}: \citet{peters2021} (Thm.~4.8) prove that no EJR-satisfying
-      mechanism can be strategy-proof
-    \item The tradeoff between \emph{proportional representation} and \emph{strategy-proofness}
-      cannot be resolved
-    \item MES is strategically \emph{simpler} than the DEM: no district selection game,
-      no coordination failures, no mobilization arms race
-  \end{itemize}
-  \medskip
-  \begin{block}{}
-    The DEM also fails strategy-proofness (its district-selection stage is directly manipulable).\\
-    Both mechanisms lose on the same criterion --- MES wins on everything else.
-  \end{block}
-  \medskip
-  \footnotesize\emph{In practice the manipulation needs detailed knowledge of others' ballots and is
-  risky --- low-stakes at scale.}
-\end{frame}
-
-\begin{frame}[shrink=15]{Two More Honest Limitations \textit{(Otras Limitaciones)}}
-  \begin{block}{The completion gap}
-    MES often \textbf{stops before spending the whole budget}: once no project is affordable to its
-    backers, a \emph{completion} step (greedy by approvals) places the rest --- with \textbf{none} of
-    the EJR guarantee.
-  \end{block}
-  \begin{itemize}
-    \item The gap depends on project costs vs.\ the per-voter share $\bshare_i=\budget/n$:
-      many small projects $\to$ the proportional phase reaches far; few expensive projects $\to$
-      completion dominates
-    \item \textbf{Design lever:} keep project cost tiers small relative to $\budget/n$
-  \end{itemize}
-  \medskip
-  \begin{block}{Ballot complexity}
-    MES asks voters to consider \emph{all} projects city-wide, not just one district's.
-  \end{block}
-  \begin{itemize}
-    \item With 50+ projects this is a real cognitive load; thin ballots waste a voter's share
-    \item \textbf{Mitigation:} a grouped ballot interface with a live ``budget impact'' indicator ---
-      richer than the DEM, still tractable
-  \end{itemize}
-\end{frame}
-
-% ══════════════════════════════════════════════════════════════════════
-\section{Comparing the Three Mechanisms}
-% ══════════════════════════════════════════════════════════════════════
-
-\begin{frame}[shrink=20]{The Property Table}
-  \begin{center}
-  \renewcommand{\arraystretch}{1.45}
-  \begin{tabular}{p{5.2cm}ccc}
-    \toprule
-    \textbf{Property} & \cDEM{\textbf{DEM}} & \cUAM{\textbf{UAM}} & \cMES{\textbf{MES}} \\
-    \midrule
-    No preference truncation    & \xmark & \cmark & \cmark \\
-    No forced noise injection   & \xmark & \cmark & \cmark \\
-    No coordination game        & \xmark & \cmark & \cmark \\
-    Bounded mobilization power  & \xmark & Partial & \cmark \\
-    $\beta$-geographic equity   & Partial & \xmark & \cmark \\
-    Strategy-proof (DSIC)       & \xmark & \xmark & \xmark \\
-    Proportional representation & \xmark & \xmark & \cmark \\
-    \bottomrule
-  \end{tabular}
-  \end{center}
-  \medskip
-  \cMES{MES \textbf{strictly dominates}} both alternatives on every property
-  except strategy-proofness --- which no proportional (EJR) mechanism can satisfy \citep{peters2021}.
-\end{frame}
-
-\begin{frame}{300-Voter Comparison: Setup \textit{(Escenario a Escala Durango)}}
-  $n = 300$ voters,\quad $\budget = 300$,\quad $\votes = 6$\\[0.5em]
-  \begin{center}
-  \small
-  \begin{tabular}{lccl}
-    \toprule
-    & Committed residents & Salience $\salience_d$ & Projects \\
-    \midrule
-    District $A$ (Center)      & 100 & 0.90 & $p_1$ (cost 120),\; $p_2$ (cost 80) \\
-    District $B$ (Residential) & 120 & 0.50 & $p_3$ (cost 100) \\
-    District $C$ (Marginalized)&  80 & 0.15 & $p_4$ (cost 60),\; $p_5$ (cost 40) \\
-    \bottomrule
-  \end{tabular}
-  \end{center}
-  \medskip
-  Additional types: 80 mobile voters in $B$ also approve $p_1$;\; 20 connected voters
-  in $C$ also approve $p_1$.
-\end{frame}
-
-\begin{frame}[shrink=20]{300-Voter Comparison: Results}
-  \begin{center}
-  \renewcommand{\arraystretch}{1.45}
-  \begin{tabular}{p{4.4cm}ccc}
-    \toprule
-    & \cDEM{\textbf{DEM}} & \cUAM{\textbf{UAM}} & \cMES{\textbf{MES}} \\
-    \midrule
-    District $A$ funded & $p_1$ & $p_1, p_2$ & $p_1$ \\
-    District $B$ funded & $p_3$ & $p_3$ & $p_3$ \\
-    District $C$ funded & $p_4$ & \alert{nothing} & $p_5$ \\
-    Noise votes present & Yes & No & No \\
-    Coordination required & Yes & No & No \\
-    Vote displacement & 70 voters & 0 & 0 \\
-    \bottomrule
-  \end{tabular}
-  \end{center}
-  \medskip
-  \begin{itemize}
-    \item \cUAM{UAM}: excludes the marginalized district entirely despite genuine demand
-    \item \cDEM{DEM}: partially protects district $C$ but wastes 70 voters' preferences
-    \item \cMES{MES}: funds district $C$ through proportionality alone --- \textbf{no constraint needed}
-  \end{itemize}
-\end{frame}
-
-% ══════════════════════════════════════════════════════════════════════
-\section{Conclusion and Policy Implications}
-% ══════════════════════════════════════════════════════════════════════
-
-\begin{frame}[shrink=10]{Policy Recommendations \textit{(Recomendaciones de Política)}}
-  \begin{enumerate}
-    \item \textbf{Replace the DEM with MES} in Durango's \textit{presupuesto participativo}
-      \begin{itemize}
-        \item Allow cross-district approval voting
-        \item Geographic equity is achieved structurally, not by restriction
-        \item Implementation is straightforward: voters mark projects they support
-      \end{itemize}
-    \item \textbf{Invest in project-level information campaigns}
-      \begin{itemize}
-        \item MES rewards informed voters: more $\info_i(p)=1$ entries $\to$ better outcomes
-        \item Targeted publicity for projects in low-salience, marginalized districts
-      \end{itemize}
-  \end{enumerate}
-\end{frame}
-
-\begin{frame}[shrink=15]{Counterfactual Simulation: Durango 2025}
-  \textbf{Setup:} 48 projects, 6 districts, \$500{,}000 MXN budget.
-  Synthetic approval ballots ($n=1{,}000$, seed 42) generated from observed 2025 vote totals.
-  \medskip
-  \begin{center}
-  \renewcommand{\arraystretch}{1.3}
-  \small
-  \begin{tabular}{lrr}
-    \toprule
-    \textbf{Metric} & \cDEM{\textbf{DEM (observed)}} & \cMES{\textbf{MES (counterfactual)}} \\
-    \midrule
-    Welfare (total votes on funded projects) & 4{,}985 & 4{,}888 \\
-    Gini (district-level equity)             & 0.300  & 0.367  \\
-    Projects funded                          & 10     & 10     \\
-    \midrule
-    District 1 funded (MXN) & 50{,}000 & 100{,}000 \\
-    District 2 funded (MXN) & 150{,}000 & 150{,}000 \\
-    District 3 funded (MXN) & 100{,}000 & 50{,}000 \\
-    District 4 funded (MXN) & 0 & 0 \\
-    District 5 funded (MXN) & 100{,}000 & 50{,}000 \\
-    District 6 funded (MXN) & 100{,}000 & 150{,}000 \\
-    \bottomrule
-  \end{tabular}
-  \end{center}
-  \medskip
-  \begin{alertblock}{Key finding}
-    MES applied to \emph{DEM-constrained} ballots does not outperform DEM.
-    Since synthetic voters each select only one district, MES never observes cross-district preferences ---
-    the same information gap that drives Propositions~1 and~2.
-    The simulation \textbf{illustrates the distortion}, not MES's full potential.
-  \end{alertblock}
-\end{frame}
-
-\begin{frame}[shrink=20]{Summary \textit{(Resumen)}}
-  \begin{enumerate}
-    \item The \cDEM{District-Exclusivity Mechanism} introduces \textbf{five distortions}:
-      preference truncation, noise injection, coordination failures, mobilization advantage,
-      and an equity tradeoff
-    \item The ``obvious'' fix (\cUAM{UAM}) \textbf{destroys geographic equity}
-      for marginalized districts
-    \item The \cMES{Method of Equal Shares} resolves all five distortions while providing
-      \textbf{structural} geographic equity via EJR
-    \item A counterfactual simulation on Durango 2025 data shows that MES applied to
-      DEM-constrained ballots \textbf{replicates the distortion} --- confirming that
-      full welfare gains require reforming \emph{both} the mechanism and the ballot format
-  \end{enumerate}
-  \bigskip
-  \begin{center}
-    \large\itshape
-    Democracy is not only cast in the ballots.\\
-    \normalsize
-    It is also in the rules that translate ballots into outcomes.
-  \end{center}
-\end{frame}
-
-\begin{frame}[standout]
-  \begin{center}
-    Thank you\\[0.8em]
-    {\normalsize Gracias}\\[1.5em]
-    {\small\ttfamily hola@marionomics.com}
-  \end{center}
-\end{frame}
-
-% ══════════════════════════════════════════════════════════════════════
-\appendix
-% ══════════════════════════════════════════════════════════════════════
-
-\begin{frame}[allowframebreaks]{References}
+\begin{frame}[allowframebreaks]{Referencias}
+  \scriptsize
   \bibliographystyle{plainnat}
-  \bibliography{references}
+  \bibliography{../notebooks/refs_peters}
 \end{frame}
 
 \end{document}
